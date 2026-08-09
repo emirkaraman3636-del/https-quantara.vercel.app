@@ -21,6 +21,7 @@ import {
 import { useData } from '../../context/DataContext';
 import { ChatMessage } from '../../lib/chat-types';
 import { processUserQuery, SUGGESTED_PROMPTS } from '../../lib/chat-engine';
+import { EvidenceTrailViewer } from '../ui/EvidenceTrailViewer';
 
 export function AIChatView() {
   const { records, analytics, aiSummary, forecastSummary, uploadedFileName } = useData();
@@ -213,6 +214,38 @@ export function AIChatView() {
               >
                 <div className="whitespace-pre-line font-normal">{msg.content}</div>
 
+                {msg.role === 'assistant' && (msg.whatHappened || msg.whyItHappened) && (
+                  <div className="mt-3 space-y-3 pt-3 border-t border-slate-700/50">
+                    {msg.whatHappened && (
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">What Happened?</span>
+                        <p className="text-slate-200">{msg.whatHappened}</p>
+                      </div>
+                    )}
+                    {msg.whyItHappened && (
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">Why It Happened?</span>
+                        <p className="text-slate-300">{msg.whyItHappened}</p>
+                      </div>
+                    )}
+                    {msg.whatItMeans && (
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">What It Means?</span>
+                        <p className="text-slate-300">{msg.whatItMeans}</p>
+                      </div>
+                    )}
+                    {msg.whatToDo && (
+                      <div className="p-2.5 mt-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                        <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider flex items-center gap-1 mb-1">
+                          <Sparkles className="w-3 h-3" />
+                          Recommended Action
+                        </span>
+                        <p className="text-indigo-200">{msg.whatToDo}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Data Highlight Pills */}
                 {msg.dataHighlights && msg.dataHighlights.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-800">
@@ -226,6 +259,11 @@ export function AIChatView() {
                       </span>
                     ))}
                   </div>
+                )}
+                
+                {/* Evidence Trail */}
+                {msg.evidence && msg.category && (
+                  <EvidenceTrailViewer evidence={msg.evidence} category={msg.category} />
                 )}
               </div>
 

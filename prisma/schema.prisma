@@ -1,0 +1,117 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+model Organization {
+  id          String        @id @default(uuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  users       User[]
+  workspaces  Workspace[]
+  auditLogs   AuditLog[]
+}
+
+model Workspace {
+  id          String        @id @default(uuid())
+  orgId       String
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name        String
+  projects    Project[]
+  createdAt   DateTime      @default(now())
+}
+
+model User {
+  id              String            @id @default(uuid()) // Supabase Auth ID matches this
+  orgId           String
+  organization    Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  email           String            @unique
+  name            String?
+  role            Role              @default(VIEWER)
+  createdAt       DateTime          @default(now())
+  auditLogs       AuditLog[]
+  dashboardConfigs DashboardConfig[]
+}
+
+model Project {
+  id              String            @id @default(uuid())
+  workspaceId     String
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  datasets        Dataset[]
+  dashboardConfigs DashboardConfig[]
+  createdAt       DateTime          @default(now())
+}
+
+model Dataset {
+  id              String            @id @default(uuid())
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name            String
+  fileUrl         String            // Supabase Storage URL
+  fileType        String
+  sizeBytes       Int
+  createdAt       DateTime          @default(now())
+  versions        DatasetVersion[]
+  analyses        Analysis[]
+}
+
+model DatasetVersion {
+  id              String            @id @default(uuid())
+  datasetId       String
+  dataset         Dataset           @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  versionNumber   Int
+  fileUrl         String
+  createdAt       DateTime          @default(now())
+}
+
+model Analysis {
+  id              String            @id @default(uuid())
+  datasetId       String
+  dataset         Dataset           @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  summaryJson     Json              // Stores AnalyticsSummary & AI insights
+  createdAt       DateTime          @default(now())
+  reports         Report[]
+}
+
+model Report {
+  id              String            @id @default(uuid())
+  analysisId      String
+  analysis        Analysis          @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  name            String
+  reportType      String            // PDF, EXCEL
+  fileUrl         String            // Download link from storage
+  shareToken      String?           @unique
+  createdAt       DateTime          @default(now())
+}
+
+model DashboardConfig {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  layoutJson      Json              // KPI cards arrangement, visible charts
+  updatedAt       DateTime          @updatedAt
+}
+
+model AuditLog {
+  id              String            @id @default(uuid())
+  orgId           String
+  organization    Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action          String
+  details         Json?
+  timestamp       DateTime          @default(now())
+}

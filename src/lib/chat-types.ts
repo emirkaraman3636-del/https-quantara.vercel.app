@@ -1,4 +1,4 @@
-import { SalesRecord, AnalyticsSummary } from './types';
+import { SalesRecord, AnalyticsSummary, AutoInsight, DataQualityMetrics, EvidenceTrail, ResultCategory } from './types';
 import { AIExecutiveSummary } from './ai-types';
 import { ForecastSummary } from './forecast-types';
 
@@ -7,7 +7,13 @@ export type ChatRole = 'user' | 'assistant';
 export interface ChatMessage {
   id: string;
   role: ChatRole;
-  content: string;
+  content: string; // Keep for general text or fallback
+  whatHappened?: string;
+  whyItHappened?: string;
+  whatItMeans?: string;
+  whatToDo?: string;
+  category?: ResultCategory;
+  evidence?: EvidenceTrail;
   timestamp: string;
   dataHighlights?: Array<{ label: string; value: string; color?: string }>;
   suggestedFollowUps?: string[];

@@ -106,7 +106,7 @@ export function SizeAnalyticsView() {
                 </Pie>
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                  formatter={(val: any) => [`${val} units`, 'Quantity']}
+                  formatter={(val: unknown) => [`${val} units`, 'Quantity']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -140,7 +140,7 @@ export function SizeAnalyticsView() {
                 <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                  formatter={(val: any) => [`$${Number(val).toLocaleString()}`, 'Revenue']}
+                  formatter={(val: unknown) => [`$${Number(val).toLocaleString()}`, 'Revenue']}
                 />
                 <Bar dataKey="revenue" fill="#10b981" radius={[8, 8, 0, 0]} />
               </BarChart>

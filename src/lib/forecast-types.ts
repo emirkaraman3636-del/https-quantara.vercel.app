@@ -19,6 +19,8 @@ export interface PeriodForecast {
   expectedRevenueGrowth: number; // percentage vs historical baseline
   expectedQuantity: number;
   expectedQuantityGrowth: number;
+  predictionInterval?: { min: number; max: number };
+  dataSufficiencyExplanation?: string;
   topExpectedProducts: Array<{ name: string; category: string; projectedRevenue: number; projectedQuantity: number }>;
   keyTrends: string[];
   strategicRisks: string[];

@@ -16,7 +16,8 @@ import {
   Download,
   ShieldCheck,
   Activity,
-  Boxes
+  Boxes,
+  Sparkles
 } from 'lucide-react';
 import {
   AreaChart,
@@ -39,7 +40,7 @@ const CATEGORY_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', 
 
 export function OverviewView() {
   const { records, analytics, aiSummary, forecastSummary, inventorySummary, setActiveTab, uploadedFileName } = useData();
-  const { kpis, dailyTrends, categoryMetrics, topProducts, sizeMetrics } = analytics;
+  const { kpis, dailyTrends, categoryMetrics, topProducts, sizeMetrics, chartInsights } = analytics;
   const [showExportModal, setShowExportModal] = useState(false);
 
   const handleExport = (type: 'pdf' | 'excel' | 'csv') => {
@@ -194,7 +195,7 @@ export function OverviewView() {
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                  formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
+                  formatter={(value: unknown) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                 />
                 <Area
                   type="monotone"
@@ -207,6 +208,22 @@ export function OverviewView() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          
+          {chartInsights?.revenue && (
+            <div className="mt-5 pt-4 border-t border-slate-800">
+              <div className="flex gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-200">{chartInsights.revenue.title}</h4>
+                  <p className="text-xs text-slate-400 mt-1">{chartInsights.revenue.whyItHappened}</p>
+                  <div className="mt-2 p-2 bg-indigo-900/20 border border-indigo-500/20 rounded text-xs text-indigo-200">
+                    <span className="font-semibold block mb-0.5 text-indigo-300">💡 Aksiyon:</span>
+                    {chartInsights.revenue.whatToDo}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Category Share Donut Chart (1 Column) */}
@@ -240,7 +257,7 @@ export function OverviewView() {
                 </Pie>
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                  formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
+                  formatter={(value: unknown) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -260,6 +277,22 @@ export function OverviewView() {
               </div>
             ))}
           </div>
+
+          {chartInsights?.category && (
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <div className="flex gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-200">{chartInsights.category.title}</h4>
+                  <p className="text-[11px] text-slate-400 mt-1">{chartInsights.category.whyItHappened}</p>
+                  <div className="mt-2 p-2 bg-emerald-900/20 border border-emerald-500/20 rounded text-[11px] text-emerald-200">
+                    <span className="font-semibold block mb-0.5 text-emerald-300">💡 Aksiyon:</span>
+                    {chartInsights.category.whatToDo}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -281,7 +314,7 @@ export function OverviewView() {
             </div>
 
             <p className="text-xs text-slate-300">
-              Select your preferred export format for dataset <strong>"{uploadedFileName || 'Enterprise Sales Dataset'}"</strong>:
+              Select your preferred export format for dataset <strong>&quot;{uploadedFileName || 'Enterprise Sales Dataset'}&quot;</strong>:
             </p>
 
             <div className="space-y-3">

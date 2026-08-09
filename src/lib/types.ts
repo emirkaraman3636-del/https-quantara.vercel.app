@@ -1,3 +1,27 @@
+export type ResultCategory = 'Kesin Bulgular' | 'Olası Açıklamalar' | 'Bilinmeyenler';
+
+export interface EvidenceTrail {
+  usedColumns: string[];
+  calculationMethod: string;
+  dataVolume: number;
+  filtersApplied: string[];
+  keyMetrics: { label: string; value: string | number }[];
+}
+
+export interface SufficiencyScore {
+  isSufficient: boolean;
+  score: number;
+  reason: string;
+  requiredAction?: string;
+}
+
+export interface DataSufficiencyReport {
+  overall: boolean;
+  basicStats: SufficiencyScore;
+  forecasting: SufficiencyScore;
+  segmentation: SufficiencyScore;
+}
+
 export interface SalesRecord {
   id: string;
   productName: string;
@@ -9,7 +33,7 @@ export interface SalesRecord {
   revenue: number;
   size: string;
   stock: number;
-  [key: string]: any; // Allow custom extra attributes
+  [key: string]: unknown; // Allow custom extra attributes
 }
 
 export interface ColumnMapping {
@@ -103,6 +127,48 @@ export interface MonthlyTrendMetric {
   orders: number;
 }
 
+export interface DataQualityMetrics {
+  score: number; // 0-100
+  missingDataRate: number; // Percentage
+  duplicateRows: number;
+  anomalyCount: number;
+  dataTypes: Record<string, string>;
+  columnInsights: Record<string, string>; // AI explanation of column meaning
+}
+
+export interface ChartAIInsight {
+  title: string;
+  summary: string;
+  whyItHappened: string;
+  whatToDo: string;
+  category: ResultCategory;
+  evidence?: EvidenceTrail;
+}
+
+
+export interface AutoInsight {
+  id: string;
+  type: 'opportunity' | 'risk' | 'anomaly' | 'trend';
+  title: string;
+  whatHappened: string;
+  whyItHappened: string;
+  whatItMeans: string;
+  whatToDo: string;
+  priority: 'high' | 'medium' | 'low';
+  category: ResultCategory;
+  evidence: EvidenceTrail;
+}
+
+export interface SegmentationCluster {
+  id: string;
+  name: string;
+  description: string;
+  count: number;
+  revenue: number;
+  percentage: number;
+  traits: string[];
+}
+
 export interface AnalyticsSummary {
   kpis: KPIMetrics;
   productMetrics: ProductMetric[];
@@ -116,6 +182,17 @@ export interface AnalyticsSummary {
   monthlyTrends: MonthlyTrendMetric[];
   categories: string[];
   sizes: string[];
+  dataQuality: DataQualityMetrics;
+  chartInsights: {
+    revenue: ChartAIInsight;
+    category: ChartAIInsight;
+  };
+  autoInsights: AutoInsight[];
+  segmentation: {
+    customers: SegmentationCluster[];
+    products: SegmentationCluster[];
+  };
+  sufficiency: DataSufficiencyReport;
 }
 
-export type ActiveTab = 'overview' | 'upload' | 'products' | 'sizes' | 'trends' | 'ai-insights' | 'forecasting' | 'chat' | 'inventory' | 'alerts';
+export type ActiveTab = 'smart-dashboard' | 'overview' | 'executive-summary' | 'data-quality' | 'upload' | 'products' | 'sizes' | 'trends' | 'ai-insights' | 'auto-insights' | 'segmentation' | 'forecasting' | 'chat' | 'inventory' | 'alerts' | 'reports';

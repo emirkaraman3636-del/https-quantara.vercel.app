@@ -10,13 +10,15 @@ import {
   Download,
   Database,
   ArrowRight,
-  Sparkles
+  RefreshCw,
+  FileCode,
+  FileCheck
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { downloadSampleCSVFile } from '../../lib/sample-data';
 
 export function UploadView() {
-  const { uploadFile, validation, records, uploadedFileName, setActiveTab, isLoading } = useData();
+  const { uploadFile, validation, records, uploadedFileName, datasetId, setActiveTab, isLoading, resetToSampleData } = useData();
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,13 +68,13 @@ export function UploadView() {
       <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900/40 via-purple-900/20 to-slate-900 border border-indigo-500/30 flex items-center justify-between">
         <div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
-            PHASE 1 - DATA INGESTION ENGINE
+            DYNAMIC BACKEND INGESTION ENGINE
           </span>
           <h3 className="text-xl font-bold text-slate-100 mt-2">
-            Upload Sales Data File (Excel & CSV)
+            Upload & Analyze Any File (Excel, CSV, TXT, JSON, DOCX, PDF)
           </h3>
           <p className="text-sm text-slate-300 max-w-2xl mt-1">
-            Our engine automatically detects columns, validates numbers and dates, handles missing revenue columns (derived as Qty × Price), and renders instant analytics.
+            Every file upload immediately purges all previous state, sends the file to the backend API (`/api/parse-file`), extracts data dynamically, generates a unique Dataset ID, and computes fresh analytics from scratch.
           </p>
         </div>
 
@@ -101,7 +103,7 @@ export function UploadView() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,.xlsx,.xls"
+          accept=".csv,.xlsx,.xls,.tsv,.txt,.json,.docx,.pdf"
           onChange={handleChange}
           className="hidden"
         />
@@ -111,18 +113,24 @@ export function UploadView() {
         </div>
 
         <h4 className="text-base font-semibold text-slate-200">
-          {isLoading ? 'Processing File & Detecting Schema...' : 'Drag & Drop your Excel (.xlsx) or CSV file here'}
+          {isLoading ? 'Sending to Backend API & Clearing Old Cache...' : 'Drag & Drop your file here to re-analyze from scratch'}
         </h4>
         <p className="text-xs text-slate-400 mt-1 max-w-md">
-          Supported fields: <span className="text-slate-300 font-medium">Product Name, Category, Customer, Date, Quantity, Price, Revenue, Size, Stock</span>
+          Supported file formats: <span className="text-slate-300 font-medium">.xlsx, .xls, .csv, .tsv, .txt, .json, .docx, .pdf</span>
         </p>
 
-        <div className="mt-5 flex items-center space-x-3 text-xs font-medium">
+        <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs font-medium">
           <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" /> Excel (.xlsx)
           </span>
           <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-cyan-400" /> CSV File
+            <FileText className="w-3.5 h-3.5 text-cyan-400" /> CSV / TSV
+          </span>
+          <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
+            <FileCode className="w-3.5 h-3.5 text-amber-400" /> TXT / JSON
+          </span>
+          <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
+            <FileCheck className="w-3.5 h-3.5 text-indigo-400" /> DOCX / PDF
           </span>
         </div>
       </div>
@@ -157,31 +165,31 @@ export function UploadView() {
         </div>
       )}
 
-      {/* Schema Detection & Validation Card */}
-      {validation && (
-        <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div className="flex items-center space-x-2">
-              <Database className="w-5 h-5 text-indigo-400" />
-              <h4 className="text-base font-semibold text-slate-200">
-                Column Detection & Schema Report
-              </h4>
-            </div>
-
-            <div className="flex items-center space-x-2 text-xs font-mono">
-              <span className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                Total Rows: {validation.totalRows}
-              </span>
-              <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Valid Records: {validation.validRows}
-              </span>
-            </div>
+      {/* Schema Detection & Dataset ID Card */}
+      <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-2">
+          <div className="flex items-center space-x-2">
+            <Database className="w-5 h-5 text-indigo-400" />
+            <h4 className="text-base font-semibold text-slate-200">
+              Active Dataset Session Info
+            </h4>
           </div>
 
-          {/* Detected Column Pills */}
+          <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+            <span className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              Dataset ID: {datasetId}
+            </span>
+            <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Total Records: {records.length}
+            </span>
+          </div>
+        </div>
+
+        {/* Detected Column Pills */}
+        {validation && validation.columnMapping && (
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Detected Column Mappings
+              Detected Column Schema Mappings
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {Object.entries(validation.columnMapping).map(([canonical, original]) => (
@@ -203,68 +211,82 @@ export function UploadView() {
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Dataset Preview Table */}
       <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h4 className="text-base font-semibold text-slate-200">
-              Active Dataset Records ({records.length})
+              Extracted Records Preview ({records.length})
             </h4>
             <p className="text-xs text-slate-400">
-              Source: {uploadedFileName ? `File (${uploadedFileName})` : 'Enterprise Demo Dataset'}
+              Active Source: {uploadedFileName ? `File (${uploadedFileName})` : 'Enterprise Demo Dataset'}
             </p>
           </div>
 
-          <span className="text-xs px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
-            Live Records Ready
-          </span>
+          <div className="flex items-center space-x-2">
+            {uploadedFileName && (
+              <button
+                onClick={resetToSampleData}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Reset to Demo Data
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase font-mono text-[11px]">
-              <tr>
-                <th className="px-4 py-3 rounded-l-lg">ID</th>
-                <th className="px-4 py-3">Product Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Qty</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Revenue</th>
-                <th className="px-4 py-3">Size</th>
-                <th className="px-4 py-3 rounded-r-lg">Stock</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {records.slice(0, 10).map((r, i) => (
-                <tr key={r.id || i} className="hover:bg-slate-800/40 transition-colors">
-                  <td className="px-4 py-3 font-mono text-slate-400">{r.id}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-100">{r.productName}</td>
-                  <td className="px-4 py-3">{r.category}</td>
-                  <td className="px-4 py-3 text-slate-400">{r.customerName}</td>
-                  <td className="px-4 py-3 font-mono">{r.date}</td>
-                  <td className="px-4 py-3 font-semibold">{r.quantity}</td>
-                  <td className="px-4 py-3">${r.price.toFixed(2)}</td>
-                  <td className="px-4 py-3 font-semibold text-emerald-400">
-                    ${r.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-4 py-3 font-mono font-bold text-indigo-300">{r.size}</td>
-                  <td className="px-4 py-3">{r.stock}</td>
+        {records.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-400 font-mono bg-slate-900/40 rounded-xl border border-slate-800">
+            No records in active dataset. Upload an Excel, CSV, TXT, JSON, DOCX, or PDF file to compute analytics.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-300">
+              <thead className="bg-slate-800/80 text-slate-400 uppercase font-mono text-[11px]">
+                <tr>
+                  <th className="px-4 py-3 rounded-l-lg">ID</th>
+                  <th className="px-4 py-3">Product Name</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Qty</th>
+                  <th className="px-4 py-3">Price</th>
+                  <th className="px-4 py-3">Revenue</th>
+                  <th className="px-4 py-3">Size</th>
+                  <th className="px-4 py-3 rounded-r-lg">Stock</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {records.slice(0, 10).map((r, i) => (
+                  <tr key={r.id || i} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="px-4 py-3 font-mono text-slate-400">{r.id}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-100">{r.productName}</td>
+                    <td className="px-4 py-3">{r.category}</td>
+                    <td className="px-4 py-3 text-slate-400">{r.customerName}</td>
+                    <td className="px-4 py-3 font-mono">{r.date}</td>
+                    <td className="px-4 py-3 font-semibold">{r.quantity}</td>
+                    <td className="px-4 py-3">${r.price.toFixed(2)}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-400">
+                      ${r.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-3 font-mono font-bold text-indigo-300">{r.size}</td>
+                    <td className="px-4 py-3">{r.stock}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          {records.length > 10 && (
-            <p className="text-center text-xs text-slate-400 mt-4 font-mono">
-              Showing first 10 of {records.length} records. All rows are included in live analytics.
-            </p>
-          )}
-        </div>
+            {records.length > 10 && (
+              <p className="text-center text-xs text-slate-400 mt-4 font-mono">
+                Showing first 10 of {records.length} records. All rows are included in live analytics.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

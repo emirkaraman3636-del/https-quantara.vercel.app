@@ -15,7 +15,9 @@ import {
   LineChart,
   MessageSquare,
   Boxes,
-  Bell
+  Bell,
+  Lightbulb,
+  Users
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ActiveTab } from '../../lib/types';
@@ -24,16 +26,21 @@ export function Sidebar() {
   const { activeTab, setActiveTab, uploadedFileName, resetToSampleData, theme, toggleTheme, records, inventorySummary } = useData();
 
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: string }[] = [
+    { id: 'smart-dashboard', label: 'Smart Dashboard', icon: <Sparkles className="w-5 h-5 text-emerald-400" />, badge: 'New' },
+    { id: 'executive-summary', label: 'Executive Briefing', icon: <Sparkles className="w-5 h-5 text-indigo-400" />, badge: 'AI' },
     { id: 'overview', label: 'Overview Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { id: 'inventory', label: 'Inventory Intelligence', icon: <Boxes className="w-5 h-5 text-amber-400" />, badge: 'ROP Matrix' },
-    { id: 'alerts', label: 'Business Alert Center', icon: <Bell className="w-5 h-5 text-rose-400" />, badge: `${inventorySummary.alerts.length} Alerts` },
+    { id: 'data-quality', label: 'Data Quality & Health', icon: <Database className="w-5 h-5 text-emerald-400" /> },
     { id: 'chat', label: 'Ask AI Copilot', icon: <MessageSquare className="w-5 h-5 text-indigo-400" />, badge: 'Live Chat' },
-    { id: 'ai-insights', label: 'AI Business Insights', icon: <Sparkles className="w-5 h-5 text-indigo-400" />, badge: 'Copilot' },
-    { id: 'forecasting', label: 'Sales Forecasting', icon: <LineChart className="w-5 h-5 text-emerald-400" />, badge: 'Forecast' },
-    { id: 'upload', label: 'Data Ingestion', icon: <UploadCloud className="w-5 h-5" />, badge: uploadedFileName ? 'Live File' : 'Upload' },
+    { id: 'auto-insights', label: 'AI Auto-Insights', icon: <Lightbulb className="w-5 h-5 text-amber-400" />, badge: 'Discovery' },
+    { id: 'segmentation', label: 'Behavioral Segments', icon: <Users className="w-5 h-5 text-indigo-400" /> },
+    { id: 'inventory', label: 'Inventory Intelligence', icon: <Boxes className="w-5 h-5 text-amber-400" />, badge: 'ROP Matrix' },
+    { id: 'alerts', label: 'Business Alert Center', icon: <Bell className="w-5 h-5 text-rose-400" />, badge: `${inventorySummary?.alerts?.length || 0} Alerts` },
+    { id: 'forecasting', label: 'Sales Forecasting', icon: <LineChart className="w-5 h-5 text-emerald-400" /> },
     { id: 'products', label: 'Product Analytics', icon: <ShoppingBag className="w-5 h-5" /> },
     { id: 'sizes', label: 'Size Distribution', icon: <Ruler className="w-5 h-5" /> },
-    { id: 'trends', label: 'Sales Trends', icon: <TrendingUp className="w-5 h-5" /> }
+    { id: 'trends', label: 'Sales Trends', icon: <TrendingUp className="w-5 h-5" /> },
+    { id: 'reports', label: 'Report Center', icon: <Sparkles className="w-5 h-5 text-indigo-400" />, badge: 'PDF/Excel' },
+    { id: 'upload', label: 'Data Ingestion', icon: <UploadCloud className="w-5 h-5" />, badge: uploadedFileName ? 'Live File' : 'Upload' }
   ];
 
   return (
@@ -49,7 +56,7 @@ export function Sidebar() {
               <h1 className="font-bold text-slate-100 text-base tracking-wide flex items-center gap-1.5">
                 VORTEX <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-mono font-medium">AI</span>
               </h1>
-              <p className="text-xs text-slate-400">Sales Analytics Platform</p>
+              <p className="text-xs text-slate-400">Smart Data Platform</p>
             </div>
           </div>
         </div>
@@ -101,7 +108,7 @@ export function Sidebar() {
                     <span className={isActive ? 'text-indigo-400' : 'text-slate-400'}>
                       {item.icon}
                     </span>
-                    <span>{item.label}</span>
+                    <span className={item.id === 'smart-dashboard' ? 'text-emerald-400 font-bold' : ''}>{item.label}</span>
                   </div>
                   {item.badge && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono">

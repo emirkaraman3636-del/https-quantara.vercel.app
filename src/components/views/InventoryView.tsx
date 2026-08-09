@@ -73,7 +73,7 @@ export function InventoryView() {
                 Immediate Inventory Reorder Required ({lowStockItems.length} SKUs)
               </h3>
               <p className="text-xs text-rose-300 mt-0.5">
-                Top item "{lowStockItems[0].productName}" (Size {lowStockItems[0].size}) is expected to run out in {lowStockItems[0].daysOfStockRemaining} days.
+                Top item &quot;{lowStockItems[0].productName}&quot; (Size {lowStockItems[0].size}) is expected to run out in {lowStockItems[0].daysOfStockRemaining} days.
               </p>
             </div>
           </div>

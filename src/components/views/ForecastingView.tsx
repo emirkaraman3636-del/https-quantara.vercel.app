@@ -138,6 +138,20 @@ export function ForecastingView() {
       </div>
 
       {/* AI Explanation Banner */}
+      {currentPeriodForecast.dataSufficiencyExplanation && (
+        <div className={`p-4 rounded-xl border mb-4 flex items-start space-x-3 text-xs sm:text-sm ${
+          sufficiency.isSufficient 
+            ? 'bg-indigo-900/20 border-indigo-500/30 text-indigo-200' 
+            : 'bg-amber-900/20 border-amber-500/30 text-amber-200'
+        }`}>
+          {sufficiency.isSufficient ? <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+          <div>
+            <strong className="block mb-1 opacity-80 uppercase tracking-wide text-[10px]">Veri Yeterlilik Durumu</strong>
+            {currentPeriodForecast.dataSufficiencyExplanation}
+          </div>
+        </div>
+      )}
+
       <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 flex items-start space-x-3">
         <Sparkles className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5 animate-pulse" />
         <div>
@@ -189,6 +203,7 @@ export function ForecastingView() {
               <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(v) => `$${v}`} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={(val: any, name: any) => [
                   val !== undefined ? `$${Number(val).toLocaleString()}` : 'N/A',
                   name === 'historicalRevenue' ? 'Historical Revenue' : name === 'projectedRevenue' ? 'AI Projected Revenue' : name
@@ -221,13 +236,18 @@ export function ForecastingView() {
       {/* Selected Period Metrics Cards (30/60/90-Day Details) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Expected Revenue Card */}
-        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2">
+        <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Expected Revenue ({selectedPeriod} Days)
           </span>
           <div className="text-3xl font-bold text-emerald-400 font-mono">
             ${currentPeriodForecast.expectedRevenue.toLocaleString()}
           </div>
+          {currentPeriodForecast.predictionInterval && (
+            <div className="text-[10px] font-mono text-slate-500 border-t border-slate-700/50 pt-2 mt-1">
+              Range: <span className="text-slate-300">${currentPeriodForecast.predictionInterval.min.toLocaleString()}</span> - <span className="text-slate-300">${currentPeriodForecast.predictionInterval.max.toLocaleString()}</span>
+            </div>
+          )}
           <div className="flex items-center space-x-1.5 text-xs font-semibold">
             <span className={currentPeriodForecast.expectedRevenueGrowth >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
               {currentPeriodForecast.expectedRevenueGrowth >= 0 ? '+' : ''}{currentPeriodForecast.expectedRevenueGrowth}%

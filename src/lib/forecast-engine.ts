@@ -208,6 +208,11 @@ export function generateSalesForecast(
     expectedRevenueGrowth: revGrowth30,
     expectedQuantity: projected30QtySum,
     expectedQuantityGrowth: revGrowth30,
+    predictionInterval: { 
+      min: Math.max(0, Math.round(projected30Sum * (1 - confidenceUncertainty * 0.5))),
+      max: Math.round(projected30Sum * (1 + confidenceUncertainty * 0.5))
+    },
+    dataSufficiencyExplanation: sufficiency.isSufficient ? 'Tahmin için yeterli veri mevcut.' : sufficiency.limitationReason,
     topExpectedProducts: top30Products,
     keyTrends: [
       `Expected revenue trajectory of $${Math.round(projected30Sum).toLocaleString()} (${revGrowth30 >= 0 ? '+' : ''}${revGrowth30}% vs baseline).`,
@@ -228,6 +233,11 @@ export function generateSalesForecast(
     expectedRevenueGrowth: revGrowth60,
     expectedQuantity: projected60QtySum,
     expectedQuantityGrowth: revGrowth60,
+    predictionInterval: { 
+      min: Math.max(0, Math.round(projected60Sum * (1 - confidenceUncertainty * 0.75))),
+      max: Math.round(projected60Sum * (1 + confidenceUncertainty * 0.75))
+    },
+    dataSufficiencyExplanation: sufficiency.isSufficient ? '60 günlük tahmin için tarihsel trendler yeterli.' : sufficiency.limitationReason,
     topExpectedProducts: top30Products,
     keyTrends: [
       `Cumulative 60-day projected revenue reaching $${Math.round(projected60Sum).toLocaleString()}.`,
@@ -248,6 +258,11 @@ export function generateSalesForecast(
     expectedRevenueGrowth: revGrowth90,
     expectedQuantity: projected90QtySum,
     expectedQuantityGrowth: revGrowth90,
+    predictionInterval: { 
+      min: Math.max(0, Math.round(projected90Sum * (1 - confidenceUncertainty))),
+      max: Math.round(projected90Sum * (1 + confidenceUncertainty))
+    },
+    dataSufficiencyExplanation: sufficiency.isSufficient ? '90 günlük uzatılmış tahmin yüksek dalgalanma (variance) içerebilir.' : sufficiency.limitationReason,
     topExpectedProducts: top30Products,
     keyTrends: [
       `Quarterly revenue trajectory estimated at $${Math.round(projected90Sum).toLocaleString()}.`,
@@ -305,7 +320,7 @@ export function generateSalesForecast(
 /**
  * Evaluates dataset volume, date span, and variance to score forecasting confidence
  */
-function evaluateDatasetSufficiency(dailyTrends: any[], totalRecords: number): DatasetSufficiency {
+function evaluateDatasetSufficiency(dailyTrends: Array<{ date: string; revenue: number; quantity: number }>, totalRecords: number): DatasetSufficiency {
   const totalDays = dailyTrends.length;
 
   if (totalDays === 0 || totalRecords === 0) {
@@ -315,8 +330,8 @@ function evaluateDatasetSufficiency(dailyTrends: any[], totalRecords: number): D
       totalRecords: 0,
       confidenceScore: 0,
       confidenceLabel: 'Insufficient',
-      limitationReason: 'The uploaded file contains no valid sales records with dates.',
-      neededDataDescription: 'Please upload an Excel or CSV file containing transactions with dates, quantities, and prices.'
+      limitationReason: 'Yüklenen dosyada geçerli tarihli satış kaydı bulunmamaktadır.',
+      neededDataDescription: 'Lütfen işlem tarihleri, miktarlar ve fiyatlar içeren bir Excel/CSV yükleyin.'
     };
   }
 
@@ -327,8 +342,8 @@ function evaluateDatasetSufficiency(dailyTrends: any[], totalRecords: number): D
       totalRecords,
       confidenceScore: 25,
       confidenceLabel: 'Insufficient',
-      limitationReason: `Dataset contains only ${totalRecords} transactions across ${totalDays} day(s). At least 7 distinct days of sales history are required for predictive trend modeling.`,
-      neededDataDescription: 'Upload a historical dataset spanning at least 1-4 weeks of sales activity.'
+      limitationReason: `Veriseti ${totalDays} gün boyunca sadece ${totalRecords} işlem içeriyor. Trend modellemesi için en az 7 farklı günlük satış geçmişi gerekir.`,
+      neededDataDescription: 'En az 1-4 haftalık satış aktivitesini kapsayan tarihsel veriler yükleyin.'
     };
   }
 
@@ -354,8 +369,8 @@ function evaluateDatasetSufficiency(dailyTrends: any[], totalRecords: number): D
     totalRecords,
     confidenceScore: score,
     confidenceLabel,
-    limitationReason: score < 70 ? `Dataset spans ${totalDays} days (${totalRecords} records). Confidence improves with 30+ days of history.` : undefined,
-    neededDataDescription: score < 70 ? 'Additional historical months will refine long-term 90-day predictions.' : undefined
+    limitationReason: score < 70 ? `Veriseti ${totalDays} gün (${totalRecords} kayıt) kapsamındadır. Güven seviyesi, 30 günden fazla veri eklendiğinde artar.` : undefined,
+    neededDataDescription: score < 70 ? 'Uzun vadeli (90 günlük) tahminleri iyileştirmek için daha fazla geçmiş aya ait veri ekleyin.' : undefined
   };
 }
 

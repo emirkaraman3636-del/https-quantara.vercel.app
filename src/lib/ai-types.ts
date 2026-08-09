@@ -36,6 +36,13 @@ export interface AIOpportunity {
   category: string;
 }
 
+export interface AutoInsight {
+  title: string;
+  description: string;
+  metric?: string;
+  trend?: 'up' | 'down' | 'flat';
+}
+
 export interface AIExecutiveSummary {
   generatedAt: string;
   datasetName: string;
@@ -53,4 +60,6 @@ export interface AIExecutiveSummary {
     averageSpendPerCustomer: number;
     customerConcentrationRisk: 'high' | 'medium' | 'low';
   };
+  chartInsights?: Record<string, unknown>;
+  autoInsights?: AutoInsight[];
 }

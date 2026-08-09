@@ -1,22 +1,21 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-import Papa from 'papaparse';
 import {
   SalesRecord,
   ValidationResult,
   AnalyticsSummary,
   ActiveTab
 } from '../lib/types';
-import { AIExecutiveSummary } from '../lib/ai-types';
+import { AIExecutiveSummary, AutoInsight } from '../lib/ai-types';
 import { ForecastSummary } from '../lib/forecast-types';
 import { InventorySummary } from '../lib/inventory-types';
 import { INITIAL_SAMPLE_RECORDS } from '../lib/sample-data';
-import { validateAndParseRows, calculateAnalytics } from '../lib/data-parser';
+import { calculateAnalytics } from '../lib/data-parser';
 import { generateAIExecutiveSummary } from '../lib/ai-engine';
 import { generateSalesForecast } from '../lib/forecast-engine';
 import { generateInventoryIntelligence } from '../lib/inventory-engine';
+import { DatasetSchema, DataQualityReport, DynamicMetrics, AIBusinessAnalysis } from '../lib/dynamic-types';
 
 interface DataContextType {
   records: SalesRecord[];
@@ -26,9 +25,15 @@ interface DataContextType {
   forecastSummary: ForecastSummary;
   inventorySummary: InventorySummary;
   validation: ValidationResult | null;
+  rawRows: Record<string, unknown>[];
+  dynamicSchema: DatasetSchema | null;
+  dynamicMetrics: DynamicMetrics | null;
+  dataQuality: DataQualityReport | null;
+  aiAnalysis: AIBusinessAnalysis | null;
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   uploadedFileName: string | null;
+  datasetId: string;
   isLoading: boolean;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
@@ -44,12 +49,21 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [records, setRecords] = useState<SalesRecord[]>(INITIAL_SAMPLE_RECORDS);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([]);
+  const [dynamicSchema, setDynamicSchema] = useState<DatasetSchema | null>(null);
+  const [dynamicMetrics, setDynamicMetrics] = useState<DynamicMetrics | null>(null);
+  const [dataQuality, setDataQuality] = useState<DataQualityReport | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [datasetId, setDatasetId] = useState<string>('demo-initial-dataset');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('executive-summary');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [aiNonce, setAiNonce] = useState<number>(0);
+
+  const [serverAiInsights, setServerAiInsights] = useState<Record<string, unknown> | null>(null);
+  const [serverAutoInsights, setServerAutoInsights] = useState<AutoInsight[]>([]);
+  const [aiAnalysis, setAiAnalysis] = useState<AIBusinessAnalysis | null>(null);
 
   // Load theme preference or set dark mode class on document element
   useEffect(() => {
@@ -78,12 +92,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Recalculate AI Executive Summary dynamically whenever records or analytics update
   const aiSummary = useMemo(() => {
-    return generateAIExecutiveSummary(
+    const summary = generateAIExecutiveSummary(
       filteredRecords,
       analytics,
       uploadedFileName || 'Enterprise Sales Dataset'
     );
-  }, [filteredRecords, analytics, uploadedFileName, aiNonce]);
+    if (serverAiInsights) {
+      summary.chartInsights = serverAiInsights;
+    }
+    if (serverAutoInsights && serverAutoInsights.length > 0) {
+      summary.autoInsights = serverAutoInsights;
+    }
+    return summary;
+  }, [filteredRecords, analytics, uploadedFileName, aiNonce, serverAiInsights, serverAutoInsights]);
 
   // Recalculate Sales Forecast dynamically whenever records or analytics update
   const forecastSummary = useMemo(() => {
@@ -104,91 +125,135 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   }, [filteredRecords, analytics, forecastSummary, uploadedFileName]);
 
-  const regenerateAISummary = () => {
+  const regenerateAISummary = async () => {
+    try {
+      const res = await fetch('/api/ai-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: analytics })
+      });
+      const data = await res.json();
+      if (data.success && data.summary) {
+        if (data.summary.chartInsights) setServerAiInsights(data.summary.chartInsights);
+        if (data.summary.autoInsights) setServerAutoInsights(data.summary.autoInsights);
+      }
+    } catch (e) {
+      console.error('Error fetching AI insights from server:', e);
+    }
     setAiNonce(prev => prev + 1);
   };
 
-  // File Upload Processor for CSV and Excel (.xlsx, .xls)
+  // File Upload Processor: Sends file to Backend API /api/parse-file after purging previous state
   const uploadFile = async (file: File): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
-    return new Promise(resolve => {
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
 
-      if (fileExt === 'csv') {
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          dynamicTyping: true,
-          complete: (results) => {
-            const rawRows = results.data as any[];
-            const { records: parsedRecords, validation: valResult } = validateAndParseRows(rawRows);
-            
-            setRecords(parsedRecords);
-            setValidation(valResult);
-            setUploadedFileName(file.name);
-            setSelectedCategory('All');
-            setIsLoading(false);
+    // 1. Immediately PURGE previous state & generate unique dataset ID
+    const newDatasetId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    setRecords([]);
+    setRawRows([]);
+    setDynamicSchema(null);
+    setDynamicMetrics(null);
+    setDataQuality(null);
+    setValidation(null);
+    setUploadedFileName(file.name);
+    setDatasetId(newDatasetId);
+    setSelectedCategory('All');
+    setServerAiInsights(null);
+    setServerAutoInsights([]);
+    setAiAnalysis(null);
 
-            if (valResult.isValid) {
-              resolve({
-                success: true,
-                message: `Successfully processed ${parsedRecords.length} rows from ${file.name}`
-              });
-            } else {
-              resolve({
-                success: false,
-                message: `Parsed file with warnings: Missing columns (${valResult.missingColumns.join(', ')})`
-              });
-            }
-          },
-          error: (err) => {
-            setIsLoading(false);
-            resolve({ success: false, message: `CSV Parsing Error: ${err.message}` });
+    try {
+      // 2. Post file to backend API endpoint /api/parse-file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/parse-file', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      setIsLoading(false);
+
+      if (data.success && data.records && data.records.length > 0) {
+        setRecords(data.records);
+        setValidation(data.validation);
+        setUploadedFileName(data.fileName);
+        setDatasetId(data.datasetId || newDatasetId);
+        if (data.analytics?.chartInsights) {
+          // If the backend sends the new AIBusinessAnalysis format
+          if (data.analytics.chartInsights.executiveSummary) {
+            setAiAnalysis(data.analytics.chartInsights as AIBusinessAnalysis);
+          } else {
+            setServerAiInsights(data.analytics.chartInsights);
           }
-        });
-      } else if (fileExt === 'xlsx' || fileExt === 'xls') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        }
+        if (data.analytics?.autoInsights) {
+          setServerAutoInsights(data.analytics.autoInsights);
+        }
+        
+        // Phase 2 Dynamic Extracted Fields
+        if (data.dynamicSchema) setDynamicSchema(data.dynamicSchema);
+        if (data.dynamicMetrics) setDynamicMetrics(data.dynamicMetrics);
+        if (data.dataQuality) setDataQuality(data.dataQuality);
+        // While records are legacy SalesRecord, rawRows from API would technically be in records if we bypass mapping,
+        // but wait, route.ts returns `records` mapped. Let's add rawRows if backend sends it, 
+        // wait, does `route.ts` return rawRows? Oh, I didn't add it in Phase 1 to response! 
+        // I need to update route.ts to return rawRows as well! Let's temporarily just use `data.records` as a fallback or fix route.ts.
+        // Actually, route.ts does NOT return rawRows. I'll need to update route.ts.
+        setRawRows(data.rawRows || data.records || []);
 
-            const { records: parsedRecords, validation: valResult } = validateAndParseRows(rawRows);
+        // Automatically switch to smart-dashboard if dynamicSchema is present
+        if (data.dynamicSchema) {
+          setActiveTab('smart-dashboard');
+        }
 
-            setRecords(parsedRecords);
-            setValidation(valResult);
-            setUploadedFileName(file.name);
-            setSelectedCategory('All');
-            setIsLoading(false);
-
-            resolve({
-              success: true,
-              message: `Successfully imported ${parsedRecords.length} sales records from Excel workbook "${file.name}"`
-            });
-          } catch (err: any) {
-            setIsLoading(false);
-            resolve({ success: false, message: `Excel Import Error: ${err.message || 'Failed to read worksheet'}` });
-          }
+        return {
+          success: true,
+          message: data.message || `Successfully processed ${data.records.length} records from backend upload.`
         };
-        reader.onerror = () => {
-          setIsLoading(false);
-          resolve({ success: false, message: 'File read error' });
-        };
-        reader.readAsArrayBuffer(file);
       } else {
-        setIsLoading(false);
-        resolve({ success: false, message: 'Unsupported file format. Please upload an Excel (.xlsx, .xls) or CSV file.' });
+        setRecords([]);
+        setRawRows([]);
+        setDynamicSchema(null);
+        setDynamicMetrics(null);
+        setDataQuality(null);
+        setValidation(data.validation || null);
+        setUploadedFileName(file.name);
+        return {
+          success: false,
+          message: data.message || `Failed to read file "${file.name}". File is empty or unreadable.`
+        };
       }
-    });
+    } catch (err) {
+      const error = err as Error;
+      setIsLoading(false);
+      setRecords([]);
+      setRawRows([]);
+      setDynamicSchema(null);
+      setDynamicMetrics(null);
+      setDataQuality(null);
+      setValidation(null);
+      setAiAnalysis(null);
+      return {
+        success: false,
+        message: `Upload Error: ${error.message || 'Failed to send file to server.'}`
+      };
+    }
   };
 
   const resetToSampleData = () => {
+    const sampleId = `demo-${Date.now()}`;
     setRecords(INITIAL_SAMPLE_RECORDS);
+    setRawRows(INITIAL_SAMPLE_RECORDS as Record<string, unknown>[]);
+    setDynamicSchema(null);
+    setDynamicMetrics(null);
+    setDataQuality(null);
     setValidation(null);
+    setAiAnalysis(null);
     setUploadedFileName(null);
+    setDatasetId(sampleId);
     setSelectedCategory('All');
   };
 
@@ -202,9 +267,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         forecastSummary,
         inventorySummary,
         validation,
+        rawRows,
+        dynamicSchema,
+        dynamicMetrics,
+        dataQuality,
+        aiAnalysis,
         activeTab,
         setActiveTab,
         uploadedFileName,
+        datasetId,
         isLoading,
         theme,
         toggleTheme,

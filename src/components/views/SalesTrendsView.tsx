@@ -90,6 +90,7 @@ export function SalesTrendsView() {
                 <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={11} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(val: any, name: any) => [
                     name === 'revenue' ? `$${Number(val).toLocaleString()}` : `${val} units`,
                     name === 'revenue' ? 'Revenue' : 'Units Sold'
@@ -124,7 +125,7 @@ export function SalesTrendsView() {
                 <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                  formatter={(val: any) => [`$${Number(val).toLocaleString()}`, 'Revenue']}
+                  formatter={(val: unknown) => [`$${Number(val).toLocaleString()}`, 'Revenue']}
                 />
                 <Bar dataKey="revenue" fill="#6366f1" radius={[8, 8, 0, 0]} name="Monthly Revenue" />
               </BarChart>

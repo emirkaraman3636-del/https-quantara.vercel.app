@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { UploadCloud, Filter, Download, Sparkles, LineChart, MessageSquare, Boxes, Bell } from 'lucide-react';
+import { UploadCloud, Filter, Download, Sparkles, LineChart, MessageSquare, Boxes, Bell, User, LogOut } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { downloadSampleCSVFile } from '../../lib/sample-data';
 
 const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
@@ -45,11 +46,16 @@ const TAB_TITLES: Record<string, { title: string; subtitle: string }> = {
   trends: {
     title: 'Sales Trends & Time-Series',
     subtitle: 'Daily and monthly revenue velocity, order growth trends, and temporal patterns'
+  },
+  reports: {
+    title: 'Enterprise Report Center',
+    subtitle: 'Generate PDF, Excel, and Shareable Links for Executive Stakeholders'
   }
 };
 
 export function Header() {
   const { activeTab, setActiveTab, analytics, selectedCategory, setSelectedCategory } = useData();
+  const { user, signOut } = useAuth();
   const currentTabInfo = TAB_TITLES[activeTab] || TAB_TITLES.overview;
 
   return (
@@ -113,8 +119,31 @@ export function Header() {
           className="flex items-center space-x-2 px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-all"
         >
           <UploadCloud className="w-4 h-4 text-indigo-400" />
-          <span>Upload File</span>
+          <span className="hidden md:inline">Upload File</span>
         </button>
+
+        {/* User Profile / Logout */}
+        <div className="flex items-center pl-4 border-l border-slate-700 ml-2">
+          {user ? (
+            <div className="flex items-center space-x-3">
+              <div className="flex flex-col items-end hidden sm:flex">
+                <span className="text-xs font-bold text-slate-200">{user.email?.split('@')[0]}</span>
+                <span className="text-[9px] font-mono text-slate-500 uppercase">Analyst</span>
+              </div>
+              <button 
+                onClick={signOut}
+                title="Log Out"
+                className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors border border-slate-700"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 border border-slate-700">
+              <User className="w-4 h-4" />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
