@@ -44,7 +44,7 @@ export function cleanHeader(header: string): string {
 // Map of canonical fields to common English & Turkish column aliases
 const COLUMN_ALIASES: Record<keyof ColumnMapping, string[]> = {
   productName: [
-    'productname', 'product', 'item', 'title', 'itemname', 'description', 'apparel', 'name',
+    'productline', 'productname', 'product', 'item', 'title', 'itemname', 'description', 'apparel', 'name',
     'urun', 'urunadi', 'urunname', 'mal', 'maladi', 'baslik', 'aciklama', 'hizmet', 'stokadi', 'cins', 'kalem'
   ],
   category: [
@@ -214,7 +214,7 @@ export function validateAndParseRows(rawRows: Record<string, unknown>[]): { reco
           quantity: null, price: null, revenue: null, size: null, stock: null
         },
         detectedColumns: [],
-        missingColumns: ['productName', 'quantity', 'price'],
+        missingColumns: ['Boyut', 'Metrik'],
         issues: [{ row: 0, column: 'File', message: 'The uploaded file contains no data rows.', severity: 'error' }]
       }
     };
@@ -238,7 +238,7 @@ export function validateAndParseRows(rawRows: Record<string, unknown>[]): { reco
           quantity: null, price: null, revenue: null, size: null, stock: null
         },
         detectedColumns: [],
-        missingColumns: ['productName'],
+        missingColumns: ['Boyut', 'Metrik'],
         issues: [{ row: 0, column: 'File', message: 'All rows in file were empty.', severity: 'error' }]
       }
     };
@@ -250,13 +250,18 @@ export function validateAndParseRows(rawRows: Record<string, unknown>[]): { reco
   const issues: ValidationIssue[] = [];
 
   const missingColumns: string[] = [];
-  if (!mapping.productName) missingColumns.push('Product Name');
+  
+  const hasDimension = mapping.productName || mapping.category || mapping.customerName || mapping.date;
+  const hasMetric = mapping.quantity || mapping.price || mapping.revenue;
+  
+  if (!hasDimension) missingColumns.push('Boyut (Tarih, Ürün veya Müşteri)');
+  if (!hasMetric) missingColumns.push('Metrik (Ciro, Adet veya Fiyat)');
 
   const records: SalesRecord[] = [];
 
   validRawRows.forEach((row, idx) => {
     const rowNum = idx + 1;
-    const rawProd = mapping.productName ? row[mapping.productName] : Object.values(row)[0] || `Item ${rowNum}`;
+    const rawProd = mapping.productName ? row[mapping.productName] : (mapping.category ? row[mapping.category] : 'Genel İşlem');
     const rawCat = mapping.category ? row[mapping.category] : 'Genel';
     const rawCust = mapping.customerName ? row[mapping.customerName] : 'Musteri';
     const rawDate = mapping.date ? row[mapping.date] : new Date().toISOString().split('T')[0];
