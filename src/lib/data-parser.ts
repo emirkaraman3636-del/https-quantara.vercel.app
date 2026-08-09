@@ -393,9 +393,10 @@ export function calculateAnalytics(records: SalesRecord[], previousAnalysis?: An
     totalQuantity += rec.quantity;
 
     // Product aggregation
-    if (!productMap.has(rec.productName)) {
-      productMap.set(rec.productName, {
-        category: rec.category,
+    const productName = String(rec.productName || 'Bilinmeyen Ürün').trim();
+    if (!productMap.has(productName)) {
+      productMap.set(productName, {
+        category: String(rec.category || 'Genel'),
         revenue: 0,
         quantity: 0,
         ordersCount: 0,
@@ -403,35 +404,38 @@ export function calculateAnalytics(records: SalesRecord[], previousAnalysis?: An
         sizes: {}
       });
     }
-    const prod = productMap.get(rec.productName)!;
-    prod.revenue += rec.revenue;
-    prod.quantity += rec.quantity;
+    const prod = productMap.get(productName)!;
+    prod.revenue += Number(rec.revenue || 0);
+    prod.quantity += Number(rec.quantity || 0);
     prod.ordersCount += 1;
-    prod.prices.push(rec.price);
-    prod.sizes[rec.size] = (prod.sizes[rec.size] || 0) + rec.quantity;
+    prod.prices.push(Number(rec.price || 0));
+    
+    const sizeName = String(rec.size || 'N/A');
+    prod.sizes[sizeName] = (prod.sizes[sizeName] || 0) + Number(rec.quantity || 0);
 
     // Category aggregation
-    if (!categoryMap.has(rec.category)) {
-      categoryMap.set(rec.category, { revenue: 0, quantity: 0, ordersCount: 0 });
+    const categoryName = String(rec.category || 'Genel').trim();
+    if (!categoryMap.has(categoryName)) {
+      categoryMap.set(categoryName, { revenue: 0, quantity: 0, ordersCount: 0 });
     }
-    const cat = categoryMap.get(rec.category)!;
-    cat.revenue += rec.revenue;
-    cat.quantity += rec.quantity;
+    const cat = categoryMap.get(categoryName)!;
+    cat.revenue += Number(rec.revenue || 0);
+    cat.quantity += Number(rec.quantity || 0);
     cat.ordersCount += 1;
 
     // Size aggregation
-    const sizeKey = rec.size.toUpperCase();
+    const sizeKey = sizeName.toUpperCase();
     if (!sizeMap.has(sizeKey)) {
-      sizeMap.set(sizeKey, { quantity: 0, revenue: 0, ordersCount: 0, stock: rec.stock });
+      sizeMap.set(sizeKey, { quantity: 0, revenue: 0, ordersCount: 0, stock: Number(rec.stock || 0) });
     }
     const sz = sizeMap.get(sizeKey)!;
-    sz.quantity += rec.quantity;
-    sz.revenue += rec.revenue;
+    sz.quantity += Number(rec.quantity || 0);
+    sz.revenue += Number(rec.revenue || 0);
     sz.ordersCount += 1;
-    sz.stock = Math.max(sz.stock, rec.stock);
+    sz.stock = Math.max(sz.stock, Number(rec.stock || 0));
 
     // Daily aggregation
-    const dateKey = rec.date || new Date().toISOString().split('T')[0];
+    const dateKey = String(rec.date || new Date().toISOString().split('T')[0]);
     if (!dailyMap.has(dateKey)) {
       dailyMap.set(dateKey, { revenue: 0, quantity: 0, orders: 0 });
     }

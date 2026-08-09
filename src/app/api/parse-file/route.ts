@@ -5,6 +5,7 @@ import { generateDataQualityReport } from '@/lib/data-quality';
 import { calculateGenericMetrics } from '@/lib/dynamic-aggregator';
 import { generateAIInsights } from '@/lib/server-ai';
 import { DynamicAnalyticsSummary } from '@/lib/dynamic-types';
+import { mapDynamicToLegacyRecords } from '@/lib/schema-mapper';
 import mammoth from 'mammoth';
 
 export async function POST(req: Request) {
@@ -83,18 +84,21 @@ export async function POST(req: Request) {
     // Generate AI Business Analyst insights
     summary.aiAnalysis = await generateAIInsights(summary);
 
+    // Map raw data to legacy format safely for older UI components
+    const legacyRecords = mapDynamicToLegacyRecords(rawRows, schema);
+
     return NextResponse.json({
       success: true,
       datasetId,
       fileName,
       message: `Dosya "${fileName}" başarıyla okundu. Toplam ${rawRows.length} veri satırı ayrıştırıldı.`,
-      records: rawRows, // Backend compatibility for UI
-      rawRows,
+      records: legacyRecords, // Safe fallback records
+      rawRows, // Original data for new dynamic components
       dynamicSchema: schema,
       dynamicMetrics: metrics,
       dataQuality: quality,
       analytics: {
-        chartInsights: summary.aiAnalysis, // Sending via analytics for UI fallback compatibility
+        chartInsights: summary.aiAnalysis,
         autoInsights: summary.aiAnalysis?.anomalies
       }
     });
