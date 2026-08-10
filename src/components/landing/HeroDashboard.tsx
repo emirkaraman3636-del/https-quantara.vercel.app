@@ -1,87 +1,187 @@
 "use client";
+import { motion } from 'framer-motion';
 
 export default function HeroDashboard() {
   return (
-    <div 
-      className="relative w-full h-[700px] bg-[#0a0a0f] border border-white/10 flex overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]"
-    >
+    <div className="relative w-full rounded-xl border border-[#272838] bg-[#0B0C15] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] font-sans" style={{ perspective: '1200px', transform: 'rotateX(2deg)' }}>
+      {/* Top Bar for Mobile */}
+      <div className="md:hidden h-14 border-b border-[#272838] bg-[#13141D] flex items-center px-4">
+        <div className="text-white font-bold text-sm">GİRDAP Dashboard</div>
+      </div>
+      
       {/* Sidebar */}
-      <div className="hidden md:flex w-64 border-r border-white/5 flex-col p-6 space-y-8">
-        <div className="flex items-center space-x-3">
-          <div className="w-6 h-6 bg-indigo-500" />
-          <span className="text-white font-medium tracking-tight">Acme Corp</span>
+      <div className="hidden md:flex w-[260px] border-r border-[#272838] bg-[#07080F] flex-col p-4">
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <div className="w-8 h-8 rounded bg-gradient-to-br from-[#7C3AED] to-[#00F0FF] flex items-center justify-center">
+             <div className="w-2.5 h-2.5 rounded-full bg-white" />
+          </div>
+          <div>
+            <div className="text-white font-bold text-sm">GİRDAP <span className="text-[10px] bg-[#7C3AED]/20 text-[#A78BFA] px-1 py-0.5 rounded ml-1">Yapay zeka</span></div>
+            <div className="text-[#64748B] text-[10px] mt-0.5">Akıllı Veri Platformu</div>
+          </div>
         </div>
-        <nav className="flex flex-col space-y-4">
-          <div className="text-sm font-medium text-white">Overview</div>
-          <div className="text-sm font-medium text-[#475569] hover:text-[#94a3b8] cursor-default transition-colors">Analytics</div>
-          <div className="text-sm font-medium text-[#475569] hover:text-[#94a3b8] cursor-default transition-colors">Data Quality</div>
-          <div className="text-sm font-medium text-[#475569] hover:text-[#94a3b8] cursor-default transition-colors">AI Analyst</div>
-        </nav>
+
+        <div className="space-y-6">
+          <div>
+            <div className="px-2 mb-2 flex justify-between items-center">
+              <span className="text-[#475569] text-[10px] font-bold uppercase tracking-wider">Aktif Veri Kümesi</span>
+              <span className="text-[#10B981] text-[10px] bg-[#10B981]/10 px-1.5 py-0.5 rounded border border-[#10B981]/20">30 kayıt</span>
+            </div>
+            <div className="px-2 py-2 rounded text-white text-xs font-medium bg-[#13141D] border border-[#272838]">Kurumsal Demo Verileri</div>
+          </div>
+
+          <div>
+            <div className="px-2 mb-2 text-[#475569] text-[10px] font-bold uppercase tracking-wider">ANALİTİK GÖRÜNÜMLER</div>
+            <div className="space-y-1">
+              <div className="px-2 py-2 flex items-center gap-2 text-xs text-[#94A3B8] hover:bg-[#13141D] rounded cursor-pointer transition-colors">
+                <span className="text-[#00F0FF]">⚡</span> Akıllı Gösterge Paneli <span className="ml-auto text-[9px] bg-[#272838] px-1 rounded">Yeni</span>
+              </div>
+              <div className="px-2 py-2 flex items-center gap-2 text-xs text-white bg-[#00F0FF]/10 rounded border border-[#00F0FF]/20 cursor-pointer">
+                <span className="text-[#00F0FF]">✦</span> Yönetici Özeti <span className="ml-auto text-[9px] bg-[#7C3AED]/20 text-[#A78BFA] px-1 rounded">Yapay zeka</span>
+              </div>
+              <div className="px-2 py-2 flex items-center gap-2 text-xs text-[#94A3B8] hover:bg-[#13141D] rounded cursor-pointer transition-colors">
+                <span className="text-[#10B981]">●</span> Veri Kalitesi ve Sağlığı
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 md:p-10 flex flex-col relative overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-end mb-10">
+      <div className="flex-1 bg-[#0B0C15] flex flex-col">
+        {/* Top Header */}
+        <div className="h-[72px] border-b border-[#272838] bg-[#0B0C15] flex items-center justify-between px-6">
           <div>
-            <div className="text-[12px] font-semibold tracking-[0.1em] uppercase text-[#10b981] mb-2 flex items-center">
-              <div className="w-2 h-2 rounded-full bg-[#10b981] mr-2 animate-pulse" />
-              Dataset: Verified
+            <h2 className="text-white font-bold text-lg">Yönetici Satışlarına Genel Bakış</h2>
+            <div className="text-[#64748B] text-xs mt-1">Gerçek zamanlı gelir metrikleri, sipariş hızı ve performans KPI'ları</div>
+          </div>
+          <div className="hidden lg:flex items-center gap-3">
+            <div className="px-3 py-1.5 rounded border border-[#272838] bg-[#13141D] text-xs text-white flex items-center gap-2">
+              <span>Tüm Kategoriler (4)</span>
+              <span className="text-[8px]">▼</span>
             </div>
-            <h2 className="text-3xl font-medium tracking-tight text-white">Q3 Financial Performance</h2>
+            <div className="px-4 py-1.5 rounded bg-[#7C3AED] text-xs font-medium text-white flex items-center gap-2 hover:bg-[#6D28D9] transition-colors">
+              <span>✦ Yardımcı Pilot'a Sor</span>
+            </div>
           </div>
         </div>
 
-        {/* KPI Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="p-6 border border-white/5 bg-white/[0.02] hover:border-white/20 transition-colors">
-            <div className="text-[#94a3b8] text-xs font-medium mb-3">REVENUE</div>
-            <div className="text-3xl font-medium tracking-tight text-white">$2,405,110</div>
-            <div className="text-[#10b981] text-xs font-medium mt-2">↑ 12.4% vs last quarter</div>
+        {/* Dashboard Content */}
+        <div className="p-6 flex-1 overflow-y-auto">
+          {/* AI Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <span className="text-[#A78BFA] text-xl">✦</span>
+              <h3 className="text-white text-xl font-bold">AI Yönetici Özeti (Yönetici Brifingi)</h3>
+            </div>
+            <div className="text-right">
+              <div className="text-[#64748B] text-[10px]">İşletme Sağlığı</div>
+              <div className="text-[#10B981] text-2xl font-bold tracking-tight">93/100</div>
+            </div>
           </div>
-          <div className="p-6 border border-white/5 bg-white/[0.02] hover:border-white/20 transition-colors">
-            <div className="text-[#94a3b8] text-xs font-medium mb-3">GROWTH (TX)</div>
-            <div className="text-3xl font-medium tracking-tight text-white">18,492</div>
-            <div className="text-[#10b981] text-xs font-medium mt-2">↑ 4.1% vs last quarter</div>
+          
+          <div className="text-[#94A3B8] text-sm mb-6">
+            Verinin yapay zeka destekli profesyonel analizini yüklediniz.
           </div>
-          <div className="p-6 border border-white/5 bg-white/[0.02] hover:border-white/20 transition-colors">
-            <div className="text-[#94a3b8] text-xs font-medium mb-3">DATA QUALITY</div>
-            <div className="text-3xl font-medium tracking-tight text-[#10b981]">99.2%</div>
-            <div className="text-[#94a3b8] text-xs font-medium mt-2">Verified automatically</div>
-          </div>
-        </div>
 
-        {/* Chart Area */}
-        <div className="flex-1 relative border border-white/5 bg-white/[0.01] p-6 hidden sm:block">
-          {/* Grid lines */}
-          <div className="absolute inset-x-6 top-6 bottom-6 flex flex-col justify-between border-l border-b border-white/5 pb-6">
-            <div className="w-full h-px bg-white/5" />
-            <div className="w-full h-px bg-white/5" />
-            <div className="w-full h-px bg-white/5" />
-            <div className="w-full h-px bg-white/5" />
-          </div>
-          {/* Synthetic SVG Line Chart */}
-          <svg className="absolute inset-x-6 top-6 bottom-12 w-[calc(100%-48px)] h-[calc(100%-72px)] preserveAspectRatio='none'" viewBox="0 0 1000 300">
-            <defs>
-              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgba(99, 102, 241, 0.2)" />
-                <stop offset="100%" stopColor="rgba(99, 102, 241, 0)" />
-              </linearGradient>
-            </defs>
-            <path d="M0,250 L100,230 L200,260 L300,180 L400,200 L500,120 L600,150 L700,80 L800,110 L900,40 L1000,60 L1000,300 L0,300 Z" fill="url(#lineGrad)" />
-            <path d="M0,250 L100,230 L200,260 L300,180 L400,200 L500,120 L600,150 L700,80 L800,110 L900,40 L1000,60" fill="none" stroke="#6366f1" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-          </svg>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column (AI Insights) */}
+            <div className="lg:col-span-2 space-y-6">
+              
+              {/* Insight Card 1 */}
+              <div className="bg-[#13141D] border border-[#272838] rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-[#10B981]">◎</span>
+                  <div className="text-white font-semibold text-sm">Temel Bulgular ve Genel Durum</div>
+                </div>
+                <div className="text-[#94A3B8] text-sm leading-relaxed space-y-4">
+                  <p>Veri setiniz toplam <span className="text-white font-medium">30 işlem</span> ve <span className="text-white font-medium">161.250 $ ciro</span> içermektedir. Ortalama sepet bölme <span className="text-white font-medium">5375,00 $</span> seviyesindedir.</p>
+                  <p><span className="text-white font-medium">En başarılı ürün:</span> Oversize Kapüşonlu Üst ($ 21.750 gelir).</p>
+                  <p><span className="text-white font-medium">Düşük performans:</span> Canvas Belt ürün grubundaki satış zayıflığı görülüyor.</p>
+                </div>
+              </div>
 
-        {/* Floating AI Panel */}
-        <div className="absolute bottom-10 right-10 w-[320px] bg-[#12121a]/95 backdrop-blur-md border border-white/10 p-5 shadow-2xl z-20 hidden md:block">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-2 h-4 bg-indigo-500 animate-pulse" />
-            <span className="text-[10px] font-semibold tracking-wider text-indigo-400 uppercase">AI Analyst Insight</span>
+              {/* Insight Card 2 */}
+              <div className="bg-[#13141D] border border-[#272838] rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-[#FBBF24]">💡</span>
+                  <div className="text-white font-semibold text-sm">Stratejik Eylem Önerileri (Ne Yapılmalı?)</div>
+                </div>
+                <ul className="text-[#94A3B8] text-sm leading-relaxed space-y-3 list-disc pl-5">
+                  <li><span className="text-white font-medium">Çapraz Satış:</span> En çok satan Oversize Hoody ürünü ile birlikte aksesuarlar paketlenerek sepet artırılabilir.</li>
+                  <li><span className="text-white font-medium">Stok Optimizasyonu:</span> Geliri düşük olan Canvas Kemer için stok devir hızı hesaplanarak indirim kampanyaları planlanmalıdır.</li>
+                  <li><span className="text-white font-medium">Sadakat Programı:</span> Hacmin büyük kısmı eski müşterilerden geliyor. Yeni müşteri kazanım maliyeti referansla düşürülebilir.</li>
+                </ul>
+              </div>
+
+              {/* Chart Mockup */}
+              <div className="bg-[#13141D] border border-[#272838] rounded-lg p-5 h-64 flex flex-col">
+                 <div className="text-white font-semibold text-sm mb-4">Gelir Trendi (Q3)</div>
+                 <div className="flex-1 relative border-l border-b border-[#272838] flex items-end gap-2 p-2 pt-8">
+                    {/* SVG Chart Line */}
+                    <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                      <path d="M0,80 Q20,70 40,50 T70,30 T100,20" fill="none" stroke="#7C3AED" strokeWidth="2" />
+                      <path d="M0,100 L0,80 Q20,70 40,50 T70,30 T100,20 L100,100 Z" fill="url(#grad)" opacity="0.2" />
+                      <defs>
+                        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#7C3AED" />
+                          <stop offset="100%" stopColor="transparent" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {/* Bars */}
+                    {[40, 60, 45, 80, 70, 95].map((h, i) => (
+                      <div key={i} className="flex-1 bg-[#272838] rounded-t opacity-50 relative z-10 hover:bg-[#00F0FF] transition-colors" style={{ height: h + "%" }}></div>
+                    ))}
+                 </div>
+              </div>
+
+            </div>
+
+            {/* Right Column (Risks & Quality) */}
+            <div className="space-y-6">
+              
+              <div className="bg-[#13141D] border border-[#272838] rounded-lg p-5">
+                 <div className="flex items-center gap-2 mb-4">
+                  <span className="text-[#EF4444]">⚠</span>
+                  <div className="text-white font-semibold text-sm">Risk Analizi ve Darboğazlar</div>
+                </div>
+                
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-[#94A3B8]">Veri Kalitesi (Data Quality)</span>
+                    <span className="text-[#10B981] font-mono">100 / 100</span>
+                  </div>
+                  <div className="h-1.5 bg-[#272838] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#10B981] w-full" />
+                  </div>
+                  <div className="text-[#64748B] text-[10px] mt-2">Eksik veri oranı: % 0</div>
+                </div>
+
+                <div className="bg-[#EF4444]/5 border border-[#EF4444]/20 rounded p-4 mb-4">
+                  <div className="text-[#EF4444] text-xs font-semibold mb-1">Müşteri/Talep Riski</div>
+                  <div className="text-[#94A3B8] text-[11px] leading-relaxed">Talep belirli zaman dilimlerine aşırı yoğunlaşmış (mevsimsellik). Nakit akışındaki dengesizlikleri engellemek için modeller veya ölü sezon indirimleri tasarlanmalı.</div>
+                </div>
+
+                <div className="bg-[#FBBF24]/5 border border-[#FBBF24]/20 rounded p-4">
+                  <div className="text-[#FBBF24] text-xs font-semibold mb-1">Büyüme Sınırı</div>
+                  <div className="text-[#94A3B8] text-[11px] leading-relaxed">Ürün koleksiyonunun büyük kısmı sadece ana kategorilerden gelir getiriyor. Pazar ödemesini genişletmek için yan hizmetler denenmeli.</div>
+                </div>
+              </div>
+
+              {/* Data Engine Logs */}
+              <div className="bg-[#0B0C15] border border-[#272838] rounded-lg p-4 font-mono text-[10px] text-[#64748B]">
+                <div className="mb-2 text-[#94A3B8] uppercase">Engine Status</div>
+                <div className="space-y-1">
+                  <div><span className="text-[#10B981]">✔</span> VALIDATING RECORDS...</div>
+                  <div><span className="text-[#10B981]">✔</span> 48,291 ROWS PARSED</div>
+                  <div><span className="text-[#10B981]">✔</span> DETERMINISTIC CHECK PASSED</div>
+                  <div className="text-[#7C3AED]">▶ INFERRING INSIGHTS...</div>
+                </div>
+              </div>
+
+            </div>
           </div>
-          <p className="text-sm text-white leading-relaxed font-medium">
-            Revenue surged 12.4% primarily due to Enterprise tier expansion. Small business revenue remained flat, while churn dropped by 2.1%.
-          </p>
         </div>
       </div>
     </div>

@@ -24,18 +24,9 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative pt-40 pb-24 md:pt-48 md:pb-40 overflow-hidden flex flex-col items-center min-h-screen">
+    <section className="relative pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden flex flex-col items-center min-h-screen bg-[#07080F]">
       {/* Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-900/20 blur-[120px] rounded-full pointer-events-none z-[-1]" />
-      
-      {/* Grid Background */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-[-2] opacity-30"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }}
-      />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#7C3AED]/10 blur-[120px] rounded-full pointer-events-none z-[-1]" />
 
       <motion.div 
         className="max-w-7xl mx-auto px-6 text-center z-10 w-full"
@@ -44,14 +35,14 @@ export default function HeroSection() {
         animate="visible"
       >
         <motion.div variants={itemVariants} className="mb-6">
-          <span className="text-[12px] font-semibold tracking-[0.1em] uppercase text-[#475569]">
+          <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#00F0FF] px-3 py-1 bg-[#00F0FF]/10 rounded border border-[#00F0FF]/20">
             Enterprise Data Intelligence
           </span>
         </motion.div>
 
         <motion.h1 
           variants={itemVariants}
-          className="text-[56px] md:text-[80px] lg:text-[110px] font-medium leading-[1] md:leading-[1] lg:leading-[0.95] tracking-[-0.02em] md:tracking-[-0.03em] lg:tracking-[-0.04em] text-white mb-8 mx-auto"
+          className="text-[48px] md:text-[80px] lg:text-[110px] font-medium leading-[1] md:leading-[1] lg:leading-[0.95] tracking-[-0.04em] text-white mb-8 mx-auto"
         >
           TURN BUSINESS<br />
           DATA INTO<br />
@@ -68,15 +59,9 @@ export default function HeroSection() {
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link 
             href="/auth" 
-            className="w-full sm:w-auto px-8 py-4 bg-white text-black text-sm font-medium hover:bg-white/90 transition-colors"
+            className="w-full sm:w-auto px-8 py-4 bg-white text-[#07080F] text-sm font-semibold hover:bg-white/90 transition-colors rounded"
           >
             Explore the Platform
-          </Link>
-          <Link 
-            href="#how-it-works" 
-            className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/20 text-white text-sm font-medium hover:bg-white/5 transition-colors"
-          >
-            See How It Works
           </Link>
         </motion.div>
       </motion.div>

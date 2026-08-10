@@ -1,22 +1,18 @@
 "use client";
-import Link from 'next/link';
 
 export default function LandingFooter() {
   return (
-    <footer className="py-12 bg-[#030308] border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-        <div className="text-white font-bold tracking-tight text-xl mb-6 md:mb-0">
-          ZENTRIVO
+    <footer className="border-t border-[#272838] bg-[#0B0C15] py-12">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="text-white font-bold text-lg flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-gradient-to-br from-[#7C3AED] to-[#00F0FF] flex items-center justify-center">
+             <div className="w-1.5 h-1.5 rounded-full bg-white" />
+          </div>
+          QUANTARA
         </div>
-        
-        <div className="flex space-x-8 text-sm font-medium text-[#475569]">
-          <Link href="#platform" className="hover:text-white transition-colors">Platform</Link>
-          <Link href="#company" className="hover:text-white transition-colors">Company</Link>
-          <Link href="#legal" className="hover:text-white transition-colors">Legal</Link>
+        <div className="text-sm text-[#64748B]">
+          © 2026 Quantara. All rights reserved. Enterprise Data Intelligence.
         </div>
-      </div>
-      <div className="max-w-7xl mx-auto px-6 mt-12 text-center md:text-left text-xs font-medium text-[#475569]">
-        © 2026 Quantara. All rights reserved.
       </div>
     </footer>
   );
