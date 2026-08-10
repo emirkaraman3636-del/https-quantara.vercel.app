@@ -1,40 +1,54 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export function LandingNavbar() {
+  const { scrollY } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const background = useTransform(
+    scrollY,
+    [0, 50],
+    ['rgba(3, 3, 8, 0)', 'rgba(3, 3, 8, 0.85)']
+  );
+  const border = useTransform(
+    scrollY,
+    [0, 50],
+    ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.05)']
+  );
+
+  useEffect(() => {
+    return scrollY.onChange((latest) => {
+      setIsScrolled(latest > 20);
+    });
+  }, [scrollY]);
+
   return (
-    <motion.nav 
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-[#030308]/80 backdrop-blur-md border-b border-white/5"
+    <motion.nav
+      style={{ backgroundColor: background, borderBottomColor: border, borderBottomWidth: 1 }}
+      className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between backdrop-blur-md transition-all duration-300"
     >
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center">
-          <span className="text-white font-bold text-lg leading-none tracking-tighter">Z</span>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-sm bg-white text-black flex items-center justify-center font-bold text-lg tracking-tighter">
+          Z
         </div>
-        <span className="text-white font-semibold text-xl tracking-tight">Zentrivo</span>
+        <span className="text-xl font-medium text-white tracking-tight">Zentrivo</span>
       </div>
       
-      <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
+      <div className="hidden md:flex items-center gap-10 text-sm font-medium text-slate-400">
         <Link href="#product" className="hover:text-white transition-colors">Platform</Link>
         <Link href="#data-quality" className="hover:text-white transition-colors">Engine</Link>
         <Link href="#intelligence" className="hover:text-white transition-colors">Intelligence</Link>
         <Link href="#security" className="hover:text-white transition-colors">Security</Link>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <Link 
-          href="/auth" 
-          className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
-        >
+      <div className="flex items-center gap-6">
+        <Link href="/auth" className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden md:block">
           Sign In
         </Link>
         <Link 
           href="/auth" 
-          className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-full transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]"
+          className="text-sm font-medium text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-md transition-colors border border-white/10"
         >
           Start Analyzing
         </Link>
