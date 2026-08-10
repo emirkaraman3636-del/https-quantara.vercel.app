@@ -1,38 +1,36 @@
-import React from 'react';
-import type { Metadata } from 'next';
-import { LandingNavbar } from '../components/landing/LandingNavbar';
-import { HeroSection } from '../components/landing/HeroSection';
-import { ProductShowcase } from '../components/landing/ProductShowcase';
-import { RawDataTransition } from '../components/landing/RawDataTransition';
-import { DeterministicEngine } from '../components/landing/DeterministicEngine';
-import { PipelineFlow } from '../components/landing/PipelineFlow';
-import { ConversationalInterface } from '../components/landing/ConversationalInterface';
-import { UniversalData } from '../components/landing/UniversalData';
-import { SecurityAndTrust } from '../components/landing/SecurityAndTrust';
-import { MinimalCTA } from '../components/landing/MinimalCTA';
-import { LandingFooter } from '../components/landing/LandingFooter';
+import LandingNavbar from '../components/landing/LandingNavbar';
+import HeroSection from '../components/landing/HeroSection';
+import TrustStrip from '../components/landing/TrustStrip';
+import RawDataTransition from '../components/landing/RawDataTransition';
+import DataQualitySection from '../components/landing/DataQualitySection';
+import DeterministicEngineSection from '../components/landing/DeterministicEngineSection';
+import AIAnalystSection from '../components/landing/AIAnalystSection';
+import PipelineSection from '../components/landing/PipelineSection';
+import ProductShowcase from '../components/landing/ProductShowcase';
+import FeatureSection from '../components/landing/FeatureSection';
+import FinalCTA from '../components/landing/FinalCTA';
+import LandingFooter from '../components/landing/LandingFooter';
 
-export const metadata: Metadata = {
-  title: 'Zentrivo — Premium Business Intelligence',
-  description: 'Turn your business data into clear, evidence-based decisions with Zentrivo.',
+export const metadata = {
+  title: 'Quantara | Enterprise Data Intelligence',
+  description: 'Transform raw business data into trusted intelligence with deterministic analytics.',
 };
 
-export default function LandingPage() {
+export default function Page() {
   return (
-    <div className="min-h-screen bg-[#030308] text-slate-100 font-sans selection:bg-white/20 selection:text-white">
+    <main className="min-h-screen bg-[#030308] text-white selection:bg-indigo-500/30 selection:text-white">
       <LandingNavbar />
-      <main>
-        <HeroSection />
-        <ProductShowcase />
-        <RawDataTransition />
-        <DeterministicEngine />
-        <PipelineFlow />
-        <ConversationalInterface />
-        <UniversalData />
-        <SecurityAndTrust />
-        <MinimalCTA />
-      </main>
+      <HeroSection />
+      <TrustStrip />
+      <RawDataTransition />
+      <DataQualitySection />
+      <DeterministicEngineSection />
+      <AIAnalystSection />
+      <PipelineSection />
+      <ProductShowcase />
+      <FeatureSection />
+      <FinalCTA />
       <LandingFooter />
-    </div>
+    </main>
   );
 }

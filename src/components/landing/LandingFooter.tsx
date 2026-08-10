@@ -1,16 +1,22 @@
 "use client";
-import React from 'react';
+import Link from 'next/link';
 
-export function LandingFooter() {
+export default function LandingFooter() {
   return (
-    <footer className="border-t border-white/5 bg-[#030308] py-8">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-slate-600 font-mono">
-        <div>© 2026 Zentrivo. All rights reserved.</div>
-        <div className="flex gap-6 mt-4 md:mt-0">
-          <a href="#" className="hover:text-slate-400 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-slate-400 transition-colors">Terms</a>
-          <a href="#" className="hover:text-slate-400 transition-colors">Security</a>
+    <footer className="py-12 bg-[#030308] border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+        <div className="text-white font-bold tracking-tight text-xl mb-6 md:mb-0">
+          ZENTRIVO
         </div>
+        
+        <div className="flex space-x-8 text-sm font-medium text-[#475569]">
+          <Link href="#platform" className="hover:text-white transition-colors">Platform</Link>
+          <Link href="#company" className="hover:text-white transition-colors">Company</Link>
+          <Link href="#legal" className="hover:text-white transition-colors">Legal</Link>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-6 mt-12 text-center md:text-left text-xs font-medium text-[#475569]">
+        © 2026 Quantara. All rights reserved.
       </div>
     </footer>
   );
