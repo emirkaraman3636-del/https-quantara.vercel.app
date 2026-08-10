@@ -176,9 +176,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoading(false);
 
-      if (data.success && data.records && data.records.length > 0) {
-        setRecords(data.records);
-        setValidation(data.validation);
+      const rawRowsList = Array.isArray(data.rawRows) ? data.rawRows : (Array.isArray(data.records) ? data.records : []);
+      const hasValidData = data.success === true && rawRowsList.length > 0;
+
+      if (hasValidData) {
+        setRecords(rawRowsList);
+        setRawRows(rawRowsList);
+        setValidation(data.validation || null);
         setUploadedFileName(data.fileName);
         setDatasetId(data.datasetId || newDatasetId);
         if (data.analytics?.chartInsights) {
@@ -197,21 +201,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (data.dynamicSchema) setDynamicSchema(data.dynamicSchema);
         if (data.biContext) setBiContext(data.biContext);
         if (data.dataQuality) setDataQuality(data.dataQuality);
-        // While records are legacy SalesRecord, rawRows from API would technically be in records if we bypass mapping,
-        // but wait, route.ts returns `records` mapped. Let's add rawRows if backend sends it, 
-        // wait, does `route.ts` return rawRows? Oh, I didn't add it in Phase 1 to response! 
-        // I need to update route.ts to return rawRows as well! Let's temporarily just use `data.records` as a fallback or fix route.ts.
-        // Actually, route.ts does NOT return rawRows. I'll need to update route.ts.
-        setRawRows(data.rawRows || data.records || []);
 
-        // Automatically switch to smart-dashboard if dynamicSchema is present
-        if (data.dynamicSchema) {
+        // Automatically switch to smart-dashboard if dynamicSchema or biContext is present
+        if (data.dynamicSchema || data.biContext) {
           setActiveTab('smart-dashboard');
         }
 
         return {
           success: true,
-          message: data.message || `Successfully processed ${data.records.length} records from backend upload.`
+          message: data.message || `Successfully processed ${rawRowsList.length} records from backend upload.`
         };
       } else {
         setRecords([]);

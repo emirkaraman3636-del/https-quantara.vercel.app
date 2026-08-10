@@ -155,7 +155,7 @@ export function UploadView() {
 
           {feedback.type === 'success' && (
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => setActiveTab('smart-dashboard')}
               className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
             >
               <span>View Dashboard</span>
