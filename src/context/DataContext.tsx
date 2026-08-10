@@ -15,7 +15,7 @@ import { calculateAnalytics } from '../lib/data-parser';
 import { generateAIExecutiveSummary } from '../lib/ai-engine';
 import { generateSalesForecast } from '../lib/forecast-engine';
 import { generateInventoryIntelligence } from '../lib/inventory-engine';
-import { DatasetSchema, DataQualityReport, DynamicMetrics, AIBusinessAnalysis } from '../lib/dynamic-types';
+import { DatasetSchema, DataQualityReport, BusinessIntelligenceContext, AIBusinessAnalysis } from '../lib/dynamic-types';
 
 interface DataContextType {
   records: SalesRecord[];
@@ -27,7 +27,7 @@ interface DataContextType {
   validation: ValidationResult | null;
   rawRows: Record<string, unknown>[];
   dynamicSchema: DatasetSchema | null;
-  dynamicMetrics: DynamicMetrics | null;
+  biContext: BusinessIntelligenceContext | null;
   dataQuality: DataQualityReport | null;
   aiAnalysis: AIBusinessAnalysis | null;
   activeTab: ActiveTab;
@@ -51,7 +51,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([]);
   const [dynamicSchema, setDynamicSchema] = useState<DatasetSchema | null>(null);
-  const [dynamicMetrics, setDynamicMetrics] = useState<DynamicMetrics | null>(null);
+  const [biContext, setBiContext] = useState<BusinessIntelligenceContext | null>(null);
   const [dataQuality, setDataQuality] = useState<DataQualityReport | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [datasetId, setDatasetId] = useState<string>('demo-initial-dataset');
@@ -152,7 +152,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setRecords([]);
     setRawRows([]);
     setDynamicSchema(null);
-    setDynamicMetrics(null);
+    setBiContext(null);
     setDataQuality(null);
     setValidation(null);
     setUploadedFileName(file.name);
@@ -195,7 +195,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         
         // Phase 2 Dynamic Extracted Fields
         if (data.dynamicSchema) setDynamicSchema(data.dynamicSchema);
-        if (data.dynamicMetrics) setDynamicMetrics(data.dynamicMetrics);
+        if (data.biContext) setBiContext(data.biContext);
         if (data.dataQuality) setDataQuality(data.dataQuality);
         // While records are legacy SalesRecord, rawRows from API would technically be in records if we bypass mapping,
         // but wait, route.ts returns `records` mapped. Let's add rawRows if backend sends it, 
@@ -217,7 +217,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setRecords([]);
         setRawRows([]);
         setDynamicSchema(null);
-        setDynamicMetrics(null);
+        setBiContext(null);
         setDataQuality(null);
         setValidation(data.validation || null);
         setUploadedFileName(file.name);
@@ -232,7 +232,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setRecords([]);
       setRawRows([]);
       setDynamicSchema(null);
-      setDynamicMetrics(null);
+      setBiContext(null);
       setDataQuality(null);
       setValidation(null);
       setAiAnalysis(null);
@@ -248,7 +248,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setRecords(INITIAL_SAMPLE_RECORDS);
     setRawRows(INITIAL_SAMPLE_RECORDS as Record<string, unknown>[]);
     setDynamicSchema(null);
-    setDynamicMetrics(null);
+    setBiContext(null);
     setDataQuality(null);
     setValidation(null);
     setAiAnalysis(null);
@@ -269,7 +269,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         validation,
         rawRows,
         dynamicSchema,
-        dynamicMetrics,
+        biContext,
         dataQuality,
         aiAnalysis,
         activeTab,

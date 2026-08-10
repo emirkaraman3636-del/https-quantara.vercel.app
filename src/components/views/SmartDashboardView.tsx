@@ -4,19 +4,20 @@ import { DynamicKPIGrid } from '../dashboard/DynamicKPIGrid';
 import { DynamicChartEngine } from '../dashboard/DynamicChartEngine';
 import { DynamicDataQuality } from '../dashboard/DynamicDataQuality';
 import { RawDataTable } from '../dashboard/RawDataTable';
-import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Activity, Target } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Activity, Target, Brain, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { AIInsight } from '../../lib/dynamic-types';
 
 export function SmartDashboardView() {
   const { 
     dynamicSchema, 
-    dynamicMetrics, 
+    biContext, 
     dataQuality, 
-    aiAnalysis,
     rawRows, 
+    aiAnalysis,
     uploadedFileName 
   } = useData();
 
-  if (!dynamicSchema || !dynamicMetrics || !rawRows || rawRows.length === 0) {
+  if (!dynamicSchema || !biContext || !rawRows || rawRows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-6 bg-slate-900/50 rounded-2xl border border-slate-800 backdrop-blur-xl">
         <div className="p-6 bg-indigo-500/10 rounded-full">
@@ -41,6 +42,50 @@ export function SmartDashboardView() {
     };
     return labels[classification] || 'Genel Veri';
   };
+
+  const score = dataQuality?.dataQualityScore || 0;
+  let qColor = 'text-green-400';
+  if (score < 60) qColor = 'text-red-400';
+  else if (score < 80) qColor = 'text-yellow-400';
+
+  const renderInsightCard = (insight: AIInsight, icon: React.ReactNode, colorClass: string, borderClass: string) => (
+    <div key={insight.title} className={`bg-slate-900 rounded-2xl p-6 border ${borderClass} shadow-lg flex flex-col group`}>
+      <div className={`flex items-center gap-2 mb-4 pb-4 border-b border-slate-800 ${colorClass}`}>
+        {icon}
+        <h3 className="text-lg font-bold">{insight.title}</h3>
+      </div>
+      <div className="space-y-4 flex-1">
+        <div>
+          <p className="text-slate-300 font-medium">{insight.statement}</p>
+        </div>
+        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1 block">Kanıt / Veri</span>
+          <p className="text-sm text-slate-400">{insight.evidence}</p>
+        </div>
+        {insight.impact && (
+          <div>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1 block">Etki</span>
+            <p className="text-sm text-slate-400">{insight.impact}</p>
+          </div>
+        )}
+        {insight.recommendation && (
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-400 mb-1 block">Öneri</span>
+            <p className="text-sm text-indigo-200">{insight.recommendation}</p>
+          </div>
+        )}
+      </div>
+      <div className="mt-4 flex justify-between items-center text-xs font-bold uppercase tracking-wider">
+        <span className={
+          insight.severity === 'High' ? 'text-rose-400' : 
+          insight.severity === 'Medium' ? 'text-amber-400' : 'text-emerald-400'
+        }>
+          Önem: {insight.severity}
+        </span>
+        <span className="text-slate-500">Güven: {insight.confidence}</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -68,32 +113,39 @@ export function SmartDashboardView() {
         </div>
       </div>
 
-      {/* 2. AI EXECUTIVE SUMMARY & PERFORMANCE */}
-      {aiAnalysis && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="col-span-2 bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-lg relative overflow-hidden group">
+      {/* 2. AI EXECUTIVE SUMMARY */}
+      {aiAnalysis ? (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="col-span-3 bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-lg relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-amber-400" /> Executive Summary
+              <Lightbulb className="w-5 h-5 text-amber-400" /> Yönetici Özeti (Executive Summary)
             </h2>
             <p className="text-slate-300 leading-relaxed text-lg font-light">
               {aiAnalysis.executiveSummary}
             </p>
-          </div>
-
-          <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-lg flex flex-col justify-center">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Temel Performans</h3>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <TrendingUp className="w-5 h-5 text-emerald-400 mt-1 flex-shrink-0" />
-                <span className="text-slate-300">{aiAnalysis.performance.strengths[0] || "Güçlü yön belirtilmemiş"}</span>
+            {aiAnalysis.dataLimitations && aiAnalysis.dataLimitations.length > 0 && (
+              <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <h4 className="text-amber-400 text-sm font-bold flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4" /> Veri Kısıtlamaları
+                </h4>
+                <ul className="list-disc list-inside text-amber-200/80 text-sm space-y-1">
+                  {aiAnalysis.dataLimitations.map((lim, i) => <li key={i}>{lim}</li>)}
+                </ul>
               </div>
-              <div className="flex items-start gap-3">
-                <TrendingDown className="w-5 h-5 text-rose-400 mt-1 flex-shrink-0" />
-                <span className="text-slate-300">{aiAnalysis.performance.weaknesses[0] || "Zayıf yön belirtilmemiş"}</span>
-              </div>
-            </div>
+            )}
           </div>
+          
+          <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-lg flex flex-col justify-center items-center text-center">
+             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">AI Güven Skoru</h3>
+             <div className="text-4xl font-bold text-indigo-400 mb-2">{aiAnalysis.confidence}</div>
+             <p className="text-xs text-slate-500">Analiz güvenilirliği, verinin kalitesi ve hacmine bağlıdır.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-900/60 rounded-2xl p-6 border border-slate-800/80 flex items-center justify-center gap-3">
+          <Brain className="w-6 h-6 text-slate-500" />
+          <span className="text-slate-400 font-medium">Yapay zeka içgörüleri şu an kullanılamıyor (API kota sınırına ulaşılmış veya yapılandırma eksik olabilir).</span>
         </div>
       )}
 
@@ -103,7 +155,7 @@ export function SmartDashboardView() {
           <Activity className="w-5 h-5 text-indigo-400" />
           <h2 className="text-xl font-bold text-slate-100">Anahtar Göstergeler (KPI)</h2>
         </div>
-        <DynamicKPIGrid schema={dynamicSchema} metrics={dynamicMetrics} />
+        <DynamicKPIGrid biContext={biContext} />
       </div>
 
       {/* 4. CHARTS */}
@@ -112,64 +164,46 @@ export function SmartDashboardView() {
           <h2 className="text-xl font-bold text-slate-100">Veri Görselleştirme</h2>
           <p className="text-sm text-slate-400 mt-1">Yapay zeka tarafından otomatik oluşturulan grafikler</p>
         </div>
-        <DynamicChartEngine schema={dynamicSchema} metrics={dynamicMetrics} rawRows={rawRows} />
+        <DynamicChartEngine schema={dynamicSchema} biContext={biContext} rawRows={rawRows} />
       </div>
 
-      {/* 5. AI DEEP DIVE: OPPORTUNITIES, RISKS, ANOMALIES */}
+      {/* 5. AI DEEP DIVE: CRITICAL PROBLEMS, OPPORTUNITIES, ACTIONS */}
       {aiAnalysis && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Fırsatlar */}
-          <div className="bg-slate-900 rounded-2xl p-6 border border-emerald-900/30 shadow-lg">
-            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800">
-              <Target className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Fırsatlar</h3>
+        <div className="space-y-8">
+          
+          {aiAnalysis.criticalProblems.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-rose-400 mb-6 flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6" /> Kritik Problemler
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {aiAnalysis.criticalProblems.map(insight => renderInsightCard(insight, <AlertTriangle className="w-5 h-5" />, 'text-rose-400', 'border-rose-900/30'))}
+              </div>
             </div>
-            <div className="space-y-6">
-              {aiAnalysis.opportunities?.slice(0, 3).map((opp, idx) => (
-                <div key={idx} className="group">
-                  <h4 className="text-emerald-300 font-semibold mb-1 group-hover:text-emerald-200 transition-colors">{opp.title}</h4>
-                  <p className="text-sm text-slate-400 leading-relaxed">{opp.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
-          {/* Riskler */}
-          <div className="bg-slate-900 rounded-2xl p-6 border border-rose-900/30 shadow-lg">
-            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800">
-              <AlertTriangle className="w-5 h-5 text-rose-400" />
-              <h3 className="text-lg font-bold text-white">Riskler</h3>
+          {aiAnalysis.opportunities.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-emerald-400 mb-6 flex items-center gap-2">
+                <Target className="w-6 h-6" /> Fırsatlar
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {aiAnalysis.opportunities.map(insight => renderInsightCard(insight, <Target className="w-5 h-5" />, 'text-emerald-400', 'border-emerald-900/30'))}
+              </div>
             </div>
-            <div className="space-y-6">
-              {aiAnalysis.risks?.slice(0, 3).map((risk, idx) => (
-                <div key={idx} className="group">
-                  <h4 className="text-rose-300 font-semibold mb-1 group-hover:text-rose-200 transition-colors">{risk.title}</h4>
-                  <p className="text-sm text-slate-400 leading-relaxed">{risk.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
-          {/* Anomaliler & Aksiyon */}
-          <div className="bg-slate-900 rounded-2xl p-6 border border-amber-900/30 shadow-lg flex flex-col">
-            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800">
-              <Activity className="w-5 h-5 text-amber-400" />
-              <h3 className="text-lg font-bold text-white">AI Aksiyon Planı</h3>
+          {aiAnalysis.recommendedActions.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-indigo-400 mb-6 flex items-center gap-2">
+                <CheckCircle2 className="w-6 h-6" /> Önerilen Aksiyonlar
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {aiAnalysis.recommendedActions.map(insight => renderInsightCard(insight, <CheckCircle2 className="w-5 h-5" />, 'text-indigo-400', 'border-indigo-900/30'))}
+              </div>
             </div>
-            <div className="space-y-4 flex-1">
-              {aiAnalysis.actionPlan?.slice(0, 3).map((action, idx) => (
-                <div key={idx} className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-amber-300 font-semibold text-sm">{action.title}</h4>
-                    <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-1 bg-slate-800 text-slate-300 rounded-md">
-                      {action.timeframe}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">{action.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
+
         </div>
       )}
 

@@ -1,5 +1,7 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
+import iconv from 'iconv-lite';
+import jschardet from 'jschardet';
 
 export async function parseFileBuffer(buffer: Buffer, mimeType: string, filename: string): Promise<Record<string, unknown>[]> {
   try {
@@ -7,9 +9,19 @@ export async function parseFileBuffer(buffer: Buffer, mimeType: string, filename
     const isExcel = mimeType.includes('spreadsheetml') || mimeType.includes('excel') || filename.toLowerCase().endsWith('.xlsx') || filename.toLowerCase().endsWith('.xls');
 
     if (isCsv) {
-      // Handle CSV
-      // Convert buffer to string, handle potential UTF-8 BOM
-      let csvString = buffer.toString('utf-8');
+      // 1. Detect encoding using jschardet
+      const detected = jschardet.detect(buffer);
+      let encoding = detected.encoding || 'utf-8';
+      
+      // Heuristic fallback for common Turkish Windows environments if detection is unsure
+      if (encoding === 'windows-1252' || encoding === 'ISO-8859-1' || encoding === 'ISO-8859-2') {
+         // Because jschardet often misidentifies windows-1254 as windows-1252 in Turkish text
+         encoding = 'win1254'; 
+      }
+
+      let csvString = iconv.decode(buffer, encoding);
+      
+      // Remove BOM if present
       if (csvString.charCodeAt(0) === 0xFEFF) {
         csvString = csvString.slice(1);
       }

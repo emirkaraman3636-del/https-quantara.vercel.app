@@ -46,17 +46,71 @@ export interface DatasetSchema {
 
 export interface DataQualityReport {
   totalRows: number;
+  validRows: number;
+  invalidRows: number;
   duplicateRows: number;
   missingValues: Record<string, number>;
   typeMismatches: Record<string, number>;
   outliers: Record<string, number>;
+  emptyRows: number;
+  malformedRows: number;
+  dateCoverage?: { start: string; end: string };
+  detectedTypes: Record<string, string>;
+  limitations: string[];
+  dataQualityScore: number; // 0 to 100
 }
 
-export interface DynamicMetrics {
-  kpis: Record<string, number | string | null> & {
-    dateRange?: { start: string; end: string; days: number };
+export interface DeterministicMetrics {
+  totalRevenue: number | null;
+  totalCost: number | null;
+  grossProfit: number | null;
+  grossMargin: number | null;
+  totalQuantity: number | null;
+  totalTransactions: number;
+  averageOrderValue: number | null;
+  averageSellingPrice: number | null;
+  totalDiscount: number | null;
+  totalTax: number | null;
+  totalExpenses: number | null;
+  netProfit: number | null;
+}
+
+export interface ConcentrationRisk {
+  dimension: string;
+  topCount: number;
+  concentrationPercentage: number;
+  riskLevel: 'High' | 'Medium' | 'Low';
+}
+
+export interface Anomaly {
+  metric: string;
+  actualValue: number;
+  expectedRange: string;
+  severity: 'High' | 'Medium' | 'Low';
+  description: string;
+  rows?: number[];
+}
+
+export interface TimeSeriesData {
+  period: string;
+  revenue: number | null;
+  quantity: number | null;
+  margin: number | null;
+  profit: number | null;
+}
+
+export interface BusinessIntelligenceContext {
+  metadata: {
+    datasetType: DatasetClassification;
+    dateCoverage?: { start: string; end: string; days?: number };
+    totalRows: number;
   };
-  breakdowns: Record<string, Array<{ label: string; value: number }>>;
+  metrics: DeterministicMetrics;
+  breakdowns: Record<string, Array<{ label: string; revenue: number | null; profit: number | null; quantity: number | null; count: number }>>;
+  timeSeries: TimeSeriesData[];
+  concentrations: ConcentrationRisk[];
+  anomalies: Anomaly[];
+  limitations: string[];
 }
 
 export type ChartSeries = {
@@ -71,53 +125,37 @@ export type ChartConfig =
   | { id: string; type: 'bar'; title: string; data: Record<string, unknown>[]; xAxisKey: string; series: ChartSeries[]; layout?: 'horizontal' | 'vertical' }
   | { id: string; type: 'pie'; title: string; data: Record<string, unknown>[]; nameKey: string; dataKey: string; metricName: string; semanticType: SemanticType };
 
+export interface AIInsight {
+  title: string;
+  type: string;
+  severity: 'High' | 'Medium' | 'Low' | 'Info';
+  statement: string;
+  evidence: string;
+  metric: string | null;
+  value: string | null;
+  impact: string | null;
+  recommendation: string | null;
+  confidence: 'High' | 'Medium' | 'Low';
+}
+
 export interface AIBusinessAnalysis {
   executiveSummary: string;
-  performance: {
-    strengths: string[];
-    weaknesses: string[];
-  };
-  profitability: {
-    analysis: string;
-    marginHealth: 'Good' | 'Average' | 'Poor' | 'Unknown';
-  };
-  sales: {
-    analysis: string;
-    topPerformers: string[];
-    bottomPerformers: string[];
-  };
-  trends: {
-    direction: 'Up' | 'Down' | 'Stable' | 'Volatile';
-    analysis: string;
-  };
-  anomalies: Array<{
-    title: string;
-    description: string;
-    severity: 'High' | 'Medium' | 'Low';
-  }>;
-  opportunities: Array<{
-    title: string;
-    description: string;
-    impact: 'High' | 'Medium' | 'Low';
-  }>;
-  risks: Array<{
-    title: string;
-    description: string;
-    severity: 'High' | 'Medium' | 'Low';
-  }>;
-  actionPlan: Array<{
-    title: string;
-    description: string;
-    timeframe: 'Immediate' | 'Short-term' | 'Long-term';
-  }>;
-  marketingRecommendations: string[];
+  keyFindings: AIInsight[];
+  criticalProblems: AIInsight[];
+  opportunities: AIInsight[];
+  risks: AIInsight[];
+  recommendedActions: AIInsight[];
+  trendAnalysis: AIInsight[];
+  profitabilityInsights: AIInsight[];
+  marketingInsights: AIInsight[];
   dataLimitations: string[];
+  confidence: 'High' | 'Medium' | 'Low';
 }
 
 export interface DynamicAnalyticsSummary {
   schema: DatasetSchema;
   quality: DataQualityReport;
-  metrics: DynamicMetrics;
+  biContext: BusinessIntelligenceContext;
   aiAnalysis: AIBusinessAnalysis | null;
   rawSample: Record<string, unknown>[];
 }

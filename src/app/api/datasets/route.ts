@@ -2,12 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { checkTenantAccess } from '../../../lib/auth-server';
 import { supabaseAdmin } from '../../../lib/supabase-admin';
+import { analyzeDataQuality } from '@/lib/data-quality';
+import { generateDeterministicBIContext } from '@/lib/deterministic-metrics';
 import { parseFileBuffer } from '@/lib/file-parser';
 import { inferSemanticSchema } from '@/lib/semantic-inference';
-import { generateDataQualityReport } from '@/lib/data-quality';
-import { calculateGenericMetrics } from '@/lib/dynamic-aggregator';
-import { generateAIInsights } from '@/lib/server-ai';
-import { DynamicAnalyticsSummary } from '@/lib/dynamic-types';
 import mammoth from 'mammoth';
 
 export async function POST(request: Request) {
@@ -65,20 +63,17 @@ export async function POST(request: Request) {
 
     // 3. Dynamic Pipeline Execution
     const schema = await inferSemanticSchema(rawRows);
-    const quality = generateDataQualityReport(rawRows, schema);
-    const metrics = calculateGenericMetrics(rawRows, schema);
+    const quality = analyzeDataQuality(rawRows, schema);
+    const biContext = generateDeterministicBIContext(rawRows, schema, quality);
     
     // Create base summary
-    const summary: DynamicAnalyticsSummary = {
+    const summary = {
       schema,
       quality,
-      metrics,
+      biContext,
       aiAnalysis: null,
       rawSample: rawRows.slice(0, 5) // Send a small sample for UI context
     };
-
-    // 4. Generate AI Business Analyst insights
-    summary.aiAnalysis = await generateAIInsights(summary);
 
     // 5. Database Records
     const dataset = await prisma.dataset.create({

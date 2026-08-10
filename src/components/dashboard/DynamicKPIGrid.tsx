@@ -1,87 +1,64 @@
-import React, { useMemo } from 'react';
-import { DatasetSchema, SemanticColumn, DynamicMetrics } from '../../lib/dynamic-types';
-import { KPICard } from './KPICard';
-import { formatValue } from '../../lib/formatters';
-import { Calculator, DollarSign, Activity, PieChart, TrendingUp, LineChart } from 'lucide-react';
+import React from 'react';
+import { BusinessIntelligenceContext } from '../../lib/dynamic-types';
 
 interface DynamicKPIGridProps {
-  schema: DatasetSchema;
-  metrics: DynamicMetrics;
+  biContext: BusinessIntelligenceContext;
 }
 
-export function DynamicKPIGrid({ schema, metrics }: DynamicKPIGridProps) {
-  const kpiColumns = useMemo(() => {
-    if (!schema?.columns) return [];
+export function DynamicKPIGrid({ biContext }: DynamicKPIGridProps) {
+  const m = biContext.metrics;
 
-    // Filter valid metric candidates
-    let candidates = schema.columns.filter(c => 
-      c.analyticalRole === 'metric' && 
-      c.aggregatable === true && 
-      c.preferredAggregation !== 'none'
-    );
+  const formatCurrency = (val: number | null | undefined) => 
+    val != null ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(val) : 'N/A';
+  
+  const formatNumber = (val: number | null | undefined) => 
+    val != null ? new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(val) : 'N/A';
 
-    // Sort by display priority (lower number = higher priority)
-    candidates.sort((a, b) => a.displayPriority - b.displayPriority);
+  const formatPercent = (val: number | null | undefined) => 
+    val != null ? `${val.toFixed(1)}%` : 'N/A';
 
-    // Take top 4-6
-    return candidates.slice(0, 6);
-  }, [schema]);
+  const kpis = [];
 
-  if (!kpiColumns || kpiColumns.length === 0) {
+  if (m.totalRevenue != null) kpis.push({ title: 'Toplam Ciro', value: formatCurrency(m.totalRevenue), icon: '💰' });
+  if (m.totalCost != null) kpis.push({ title: 'Toplam Maliyet', value: formatCurrency(m.totalCost), icon: '📉' });
+  if (m.grossProfit != null) kpis.push({ title: 'Brüt Kâr', value: formatCurrency(m.grossProfit), icon: '✨' });
+  if (m.netProfit != null) kpis.push({ title: 'Net Kâr', value: formatCurrency(m.netProfit), icon: '💎' });
+  if (m.grossMargin != null) kpis.push({ title: 'Kâr Marjı', value: formatPercent(m.grossMargin), icon: '📊' });
+  
+  if (m.totalQuantity != null) kpis.push({ title: 'Toplam Adet/Miktar', value: formatNumber(m.totalQuantity), icon: '📦' });
+  if (m.totalTransactions != null) kpis.push({ title: 'İşlem/Sipariş Sayısı', value: formatNumber(m.totalTransactions), icon: '🛒' });
+  if (m.averageOrderValue != null) kpis.push({ title: 'Ortalama Sepet Tutarı', value: formatCurrency(m.averageOrderValue), icon: '🛍️' });
+  if (m.averageSellingPrice != null) kpis.push({ title: 'Ortalama Satış Fiyatı', value: formatCurrency(m.averageSellingPrice), icon: '🏷️' });
+  
+  if (m.totalDiscount != null && m.totalDiscount > 0) kpis.push({ title: 'Toplam İndirim', value: formatCurrency(m.totalDiscount), icon: '🎁' });
+  if (m.totalTax != null && m.totalTax > 0) kpis.push({ title: 'Toplam Vergi', value: formatCurrency(m.totalTax), icon: '🏛️' });
+  if (m.totalExpenses != null && m.totalExpenses > 0) kpis.push({ title: 'Operasyonel Giderler', value: formatCurrency(m.totalExpenses), icon: '🧾' });
+
+  if (kpis.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-6 text-center text-slate-400">
-        <Activity className="w-8 h-8 mx-auto mb-3 text-slate-500 opacity-50" />
-        <p>Bu veri setinde sayısal analiz yapılabilecek alan bulunamadı.</p>
-        <p className="text-sm mt-1">Lütfen daha fazla sayısal alan (tutar, miktar, oran vb.) içeren bir dosya yükleyin.</p>
+      <div className="bg-slate-900/60 p-6 border border-slate-800 rounded-lg text-slate-400 text-center">
+        No numeric metrics available in this dataset.
       </div>
     );
   }
 
-  const getKPITitle = (col: SemanticColumn) => {
-    const name = col.name;
-    switch (col.preferredAggregation) {
-      case 'sum': return `Toplam ${name}`;
-      case 'avg': return `Ortalama ${name}`;
-      case 'max': return `En Yüksek ${name}`;
-      case 'min': return `En Düşük ${name}`;
-      case 'count': return `${name} Sayısı`;
-      default: return name;
-    }
-  };
-
-  const getIcon = (col: SemanticColumn) => {
-    if (col.semanticType === 'currency') return <DollarSign className="w-5 h-5" />;
-    if (col.semanticType === 'percentage') return <PieChart className="w-5 h-5" />;
-    if (col.preferredAggregation === 'avg') return <Activity className="w-5 h-5" />;
-    if (col.preferredAggregation === 'sum') return <Calculator className="w-5 h-5" />;
-    return <LineChart className="w-5 h-5" />;
-  };
-
-  const getValue = (col: SemanticColumn) => {
-    // Attempt to get the value from backend metrics
-    if (metrics?.kpis?.[col.name]) {
-      const kpi = metrics.kpis[col.name] as { preferred?: number | string | null };
-      return kpi.preferred ?? null;
-    }
-    return null; // Fallback
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {kpiColumns.map((col, idx) => {
-        const rawValue = getValue(col);
-        const formattedValue = formatValue(rawValue, col.semanticType, col.name);
-        
-        return (
-          <KPICard
-            key={`kpi-${col.name}-${idx}`}
-            title={getKPITitle(col)}
-            value={formattedValue}
-            icon={getIcon(col)}
-            highlight={idx === 0}
-          />
-        );
-      })}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {kpis.map((kpi, idx) => (
+        <div key={idx} className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800/80 shadow-md hover:border-indigo-500/30 transition-colors">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              {kpi.title}
+            </span>
+            <div className="text-xl">{kpi.icon}</div>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold tracking-tight text-slate-100 truncate">
+              {kpi.value}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

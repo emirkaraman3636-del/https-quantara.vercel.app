@@ -1,65 +1,48 @@
-'use client';
-
 import React from 'react';
-import { DataProvider, useData } from '../context/DataContext';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Header } from '../components/layout/Header';
-import { OverviewView } from '../components/views/OverviewView';
-import { SmartDashboardView } from '../components/views/SmartDashboardView';
-import { InventoryView } from '../components/views/InventoryView';
-import { AlertCenterView } from '../components/views/AlertCenterView';
-import { AIChatView } from '../components/views/AIChatView';
-import { AutoInsightsView } from '../components/views/AutoInsightsView';
-import { AIInsightsView } from '../components/views/AIInsightsView';
-import { SegmentationView } from '../components/views/SegmentationView';
-import { ForecastingView } from '../components/views/ForecastingView';
-import { UploadView } from '../components/views/UploadView';
-import { ProductAnalyticsView } from '../components/views/ProductAnalyticsView';
-import { SizeAnalyticsView } from '../components/views/SizeAnalyticsView';
-import { SalesTrendsView } from '../components/views/SalesTrendsView';
-import { AIExecutiveBriefing } from '../components/ai/AIExecutiveBriefing';
-import { DataQualityReport } from '../components/dashboard/DataQualityReport';
-import { AILoadingScreen } from '../components/ai/AILoadingScreen';
-import { ReportCenterView } from '../components/views/ReportCenterView';
+import type { Metadata } from 'next';
+import { LandingNavbar } from '../components/landing/LandingNavbar';
+import { HeroSection } from '../components/landing/HeroSection';
+import { DashboardPreview } from '../components/landing/DashboardPreview';
+import { RawDataToIntelligence } from '../components/landing/RawDataToIntelligence';
+import { HowItWorks } from '../components/landing/HowItWorks';
+import { TrustAndQuality } from '../components/landing/TrustAndQuality';
+import { DeterministicIntelligence } from '../components/landing/DeterministicIntelligence';
+import { AIAnalystPreview } from '../components/landing/AIAnalystPreview';
+import { UniversalIntelligence } from '../components/landing/UniversalIntelligence';
+import { SecuritySection } from '../components/landing/SecuritySection';
+import { FinalCTA } from '../components/landing/FinalCTA';
+import { LandingFooter } from '../components/landing/LandingFooter';
 
-function DashboardContent() {
-  const { activeTab, isLoading } = useData();
+export const metadata: Metadata = {
+  title: 'Zentrivo — AI-Powered Business Intelligence',
+  description: 'Turn your business data into clear, evidence-based decisions with Zentrivo.',
+  openGraph: {
+    title: 'Zentrivo — AI-Powered Business Intelligence',
+    description: 'Turn your business data into clear, evidence-based decisions with Zentrivo.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Zentrivo — AI-Powered Business Intelligence',
+    description: 'Turn your business data into clear, evidence-based decisions with Zentrivo.',
+  }
+};
 
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-200">
-      <AILoadingScreen isLoading={isLoading} />
-      {/* Fixed Sidebar */}
-      <Sidebar />
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="p-8 max-w-7xl mx-auto w-full flex-1">
-          {activeTab === 'executive-summary' && <AIExecutiveBriefing />}
-          {activeTab === 'smart-dashboard' && <SmartDashboardView />}
-          {activeTab === 'overview' && <OverviewView />}
-          {activeTab === 'data-quality' && <DataQualityReport />}
-          {activeTab === 'inventory' && <InventoryView />}
-          {activeTab === 'alerts' && <AlertCenterView />}
-          {activeTab === 'chat' && <AIChatView />}
-          {activeTab === 'ai-insights' && <AutoInsightsView />}
-          {activeTab === 'segmentation' && <SegmentationView />}
-          {activeTab === 'forecasting' && <ForecastingView />}
-          {activeTab === 'upload' && <UploadView />}
-          {activeTab === 'products' && <ProductAnalyticsView />}
-          {activeTab === 'sizes' && <SizeAnalyticsView />}
-          {activeTab === 'trends' && <SalesTrendsView />}
-          {activeTab === 'reports' && <ReportCenterView />}
-        </main>
-      </div>
+    <div className="min-h-screen bg-[#030308] text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
+      <LandingNavbar />
+      <HeroSection />
+      <DashboardPreview />
+      <RawDataToIntelligence />
+      <HowItWorks />
+      <TrustAndQuality />
+      <DeterministicIntelligence />
+      <AIAnalystPreview />
+      <UniversalIntelligence />
+      <SecuritySection />
+      <FinalCTA />
+      <LandingFooter />
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <DataProvider>
-      <DashboardContent />
-    </DataProvider>
   );
 }

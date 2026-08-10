@@ -1,60 +1,76 @@
-import { AnalyticsSummary } from './types';
 import OpenAI from 'openai';
+import { DynamicAnalyticsSummary, AIBusinessAnalysis } from './dynamic-types';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { AIFallbackResponseSchema, AIBusinessAnalysisSchema } from './zod-schemas';
 
 /**
  * Server-Side AI Insights Generator
  * This function runs ONLY on the server (API routes or background tasks).
- * Secret API keys (OPENAI_API_KEY, GEMINI_API_KEY) are read strictly from process.env on the server.
- * NO API keys or AI SDKs are exposed to the client bundle.
  */
-import { DynamicAnalyticsSummary, AIBusinessAnalysis } from './dynamic-types';
-
 export async function generateAIInsights(summary: DynamicAnalyticsSummary): Promise<AIBusinessAnalysis | null> {
-  const openaiKey = process.env.OPENAI_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
 
-  if (!openaiKey && !geminiKey) {
-    return null; // Return null if AI is not configured, UI will handle fallback
+  if (!apiKey) {
+    console.warn("API_KEY is missing. AI Insights will be disabled.");
+    return null;
   }
 
   const prompt = `
-Sen veri odaklı profesyonel bir iş analistisin. Sana verilen veri özetini (schema, quality report, metrics) inceleyip, işletmenin türünü anlayarak aşağıdaki JSON formatında bir analiz çıkar.
+You are a highly professional, data-driven Enterprise AI Business Analyst.
+Your task is to analyze the provided deterministic Business Intelligence Context and generate a structured business analysis.
 
-VERİ ÖZETİ:
-Schema (Kolonlar ve Tipleri): ${JSON.stringify(summary.schema.columns.map(c => ({ name: c.name, type: c.semanticType, role: c.analyticalRole })))}
-Dataset Tipi: ${summary.schema.datasetType}
-Veri Kalitesi (Boş hücre vb.): ${JSON.stringify(summary.quality.missingValues)}
-Hesaplanmış Metrikler (Toplamlar ve Ortalamalar): ${JSON.stringify(summary.metrics.kpis)}
-Metrik Kırılımları (Kategorik Dağılım): ${JSON.stringify(summary.metrics.breakdowns)}
+ZERO HALLUCINATION POLICY:
+- NEVER invent, estimate, or independently calculate financial numbers (Revenue, Cost, Profit, Margin, etc.).
+- The provided "Business Intelligence Context" is the SINGLE SOURCE OF TRUTH.
+- If required data (e.g., cost, advertising spend) does not exist, explicitly state: "Insufficient data". NEVER fabricate missing data.
+- Do NOT recommend advertising or marketing based on assumed ROAS/CAC if marketing data is absent.
+- Preserve the distinction between FACT (from data), INFERENCE, RECOMMENDATION, and UNKNOWN.
 
-GÖREV:
-Aşağıdaki anahtarlara sahip, eksiksiz bir JSON döndür:
+PRIORITIZED PROBLEM & OPPORTUNITY DETECTION:
+- Identify top problems and opportunities based on financial impact, magnitude, trend, and concentration.
+- For each insight, include the specific evidence (metrics/values) directly from the context.
+
+PROFITABILITY & TRENDS:
+- If cost data exists, analyze the highest/lowest margin entities. If absent, explicitly state profitability cannot be evaluated.
+- Explain trends only based on provided time-series data. If data is limited, state that trend confidence is low.
+
+DATA LIMITATIONS & CONFIDENCE:
+- Always populate "dataLimitations" with missing aspects (e.g., "cost data unavailable").
+- Set the overall confidence and individual insight confidence based on data completeness and consistency.
+
+OUTPUT FORMAT:
+You must return a raw JSON object EXACTLY matching this typescript schema:
 {
-  "executiveSummary": "İşletmenin genel durumu hakkında 1-2 paragraflık profesyonel özet.",
-  "performance": { "strengths": ["Güçlü yön 1"], "weaknesses": ["Zayıf yön 1"] },
-  "profitability": { "analysis": "Kârlılık analizi (maliyet verisi yoksa belirt)", "marginHealth": "Good" | "Average" | "Poor" | "Unknown" },
-  "sales": { "analysis": "Satış hacmi analizi", "topPerformers": ["En iyi kalemler"], "bottomPerformers": ["En zayıf kalemler"] },
-  "trends": { "direction": "Up" | "Down" | "Stable" | "Volatile", "analysis": "Trend analizi" },
-  "anomalies": [ { "title": "...", "description": "...", "severity": "High" | "Medium" | "Low" } ],
-  "opportunities": [ { "title": "...", "description": "...", "impact": "High" | "Medium" | "Low" } ],
-  "risks": [ { "title": "...", "description": "...", "severity": "High" | "Medium" | "Low" } ],
-  "actionPlan": [ { "title": "...", "description": "...", "timeframe": "Immediate" | "Short-term" | "Long-term" } ],
-  "marketingRecommendations": ["Öneri 1", "Öneri 2"],
-  "dataLimitations": ["Veri yetersizlikleri (örneğin maliyet yok, müşteri yok vb.)"]
+  "executiveSummary": "string",
+  "keyFindings": [{ "title": "string", "type": "string", "severity": "High" | "Medium" | "Low" | "Info", "statement": "string", "evidence": "string", "metric": "string" | null, "value": "string" | null, "impact": "string" | null, "recommendation": "string" | null, "confidence": "High" | "Medium" | "Low" }],
+  "criticalProblems": [/* same structure */],
+  "opportunities": [/* same structure */],
+  "risks": [/* same structure */],
+  "recommendedActions": [/* same structure */],
+  "trendAnalysis": [/* same structure */],
+  "profitabilityInsights": [/* same structure */],
+  "marketingInsights": [/* same structure */],
+  "dataLimitations": ["string"],
+  "confidence": "High" | "Medium" | "Low"
 }
 
-KURALLAR:
-1. SADECE raw JSON döndür. Markdow backtick (\`\`\`) veya başka metin ekleme.
-2. Veride bulunmayan hiçbir değeri kafandan uydurma (No hallucination).
-3. Eğer maliyet (cost) verisi yoksa, kârlılık bölümünde bunu açıkça belirt ve marginHealth'i "Unknown" yap.
-4. Sektör spesifik terimler kullanma, verideki kolon isimlerine ve değerlere göre (örn: restoran ise yemekler, B2B ise müşteriler) dinamik konuş.
+BUSINESS INTELLIGENCE CONTEXT (SOURCE OF TRUTH):
+Schema Type: ${summary.schema.datasetType}
+Total Rows: ${summary.biContext.metadata.totalRows}
+Date Coverage: ${JSON.stringify(summary.biContext.metadata.dateCoverage)}
+Data Quality: ${summary.quality.dataQualityScore}/100 - Missing Values: ${JSON.stringify(summary.quality.missingValues)}
+Deterministic Metrics: ${JSON.stringify(summary.biContext.metrics)}
+Categorical Breakdowns (Top 5 per dimension): ${JSON.stringify(summary.biContext.breakdowns)}
+Time Series: ${JSON.stringify(summary.biContext.timeSeries)}
+Anomalies: ${JSON.stringify(summary.biContext.anomalies)}
+Concentration Risks: ${JSON.stringify(summary.biContext.concentrations)}
 `;
 
   try {
     let jsonText = '';
-
-    if (geminiKey) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+    
+    if (process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,55 +81,43 @@ KURALLAR:
       });
 
       if (!res.ok) {
-        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`;
-        const fallbackRes = await fetch(fallbackUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' }
-          })
-        });
-
-        if (!fallbackRes.ok) {
-          throw new Error('Gemini API Error');
-        }
-        const fallbackData = await fallbackRes.json();
-        jsonText = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-      } else {
-        const resData = await res.json();
-        jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        throw new Error('Gemini API Error: ' + await res.text());
       }
-    } else if (openaiKey) {
-      const openai = new OpenAI({ apiKey: openaiKey });
+      const resData = await res.json();
+      jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    } else {
+      const openai = new OpenAI({ apiKey: apiKey });
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' }
+        messages: [{ role: 'system', content: prompt }],
+        response_format: { type: "json_object" }
       });
       jsonText = response.choices[0]?.message?.content || '{}';
     }
 
-    // Clean up potential markdown formatting from AI output just in case
+    // Clean up markdown
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(jsonText) as AIBusinessAnalysis;
-
+    const parsedContent = JSON.parse(jsonText);
+    
+    if (parsedContent) {
+      return parsedContent as AIBusinessAnalysis;
+    } else {
+      console.warn("AI generated an invalid response schema");
+      return null;
+    }
   } catch (error) {
     console.error("Server AI Generation Error:", error);
     return null;
   }
 }
 
-import { zodResponseFormat } from 'openai/helpers/zod';
-import { AIFallbackResponseSchema } from './zod-schemas';
-
 export async function inferSemanticSchemaAI(
   unknownColumns: Array<{ name: string; sampleValues: unknown[]; technicalType: string }>
 ): Promise<Record<string, unknown>> {
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
 
-  if (!openaiKey) {
-    throw new Error('OpenAI API key missing for semantic inference');
+  if (!apiKey) {
+    throw new Error('API key missing for semantic inference');
   }
 
   const prompt = `
@@ -125,19 +129,59 @@ NEVER generate SQL. NEVER generate executable code.
 
 Input Columns:
 ${JSON.stringify(unknownColumns, null, 2)}
+
+OUTPUT FORMAT:
+Return a raw JSON object EXACTLY matching this schema:
+{
+  "columns": [
+    {
+      "name": "string",
+      "analyticalRole": "metric" | "dimension" | "identifier" | "temporal" | "boolean" | "unknown",
+      "semanticType": "currency" | "percentage" | "quantity" | "duration" | "number" | "text" | "date" | "boolean" | "unknown",
+      "aggregatable": boolean,
+      "preferredAggregation": "sum" | "avg" | "count" | "max" | "min" | "none",
+      "displayPriority": number, // 1 to 10
+      "confidence": number // 0 to 100
+    }
+  ]
+}
 `;
 
   try {
-    const openai = new OpenAI({ apiKey: openaiKey });
-    const openaiAPI = openai as unknown as { beta: { chat: { completions: { parse: (params: Record<string, unknown>) => Promise<{ choices: Array<{ message: { parsed: Record<string, unknown> | null } }> }> } } } };
-    const response = await openaiAPI.beta.chat.completions.parse({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'system', content: prompt }],
-      response_format: zodResponseFormat(AIFallbackResponseSchema, "semantic_classification")
-    });
+    let jsonText = '';
 
-    if (response.choices[0].message.parsed) {
-      return response.choices[0].message.parsed;
+    if (process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' }
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Gemini API Error: ' + await res.text());
+      }
+      const resData = await res.json();
+      jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    } else {
+      const openai = new OpenAI({ apiKey: apiKey });
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: prompt }],
+        response_format: { type: "json_object" }
+      });
+      jsonText = response.choices[0]?.message?.content || '{}';
+    }
+
+    // Clean up markdown
+    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsedContent = JSON.parse(jsonText);
+    
+    if (parsedContent) {
+      return parsedContent;
     } else {
       throw new Error('AI refused or failed to parse');
     }

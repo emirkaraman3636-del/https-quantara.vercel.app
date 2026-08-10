@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import { parseFileBuffer } from '@/lib/file-parser';
 import { inferSemanticSchema } from '@/lib/semantic-inference';
-import { generateDataQualityReport } from '@/lib/data-quality';
-import { calculateGenericMetrics } from '@/lib/dynamic-aggregator';
-import { generateAIInsights } from '@/lib/server-ai';
 import { DynamicAnalyticsSummary } from '@/lib/dynamic-types';
-import { mapDynamicToLegacyRecords } from '@/lib/schema-mapper';
+import { analyzeDataQuality } from '@/lib/data-quality';
+import { generateDeterministicBIContext } from '@/lib/deterministic-metrics';
 import mammoth from 'mammoth';
 
 export async function POST(req: Request) {
@@ -69,37 +67,30 @@ export async function POST(req: Request) {
 
     // Dynamic Pipeline Execution
     const schema = await inferSemanticSchema(rawRows);
-    const quality = generateDataQualityReport(rawRows, schema);
-    const metrics = calculateGenericMetrics(rawRows, schema);
+    const quality = analyzeDataQuality(rawRows, schema);
+    const biContext = generateDeterministicBIContext(rawRows, schema, quality);
     
     // Create base summary
     const summary: DynamicAnalyticsSummary = {
       schema,
       quality,
-      metrics,
+      biContext,
       aiAnalysis: null,
-      rawSample: rawRows.slice(0, 5)
+      rawSample: rawRows.slice(0, 5) // Send a small sample for UI context
     };
-
-    // Generate AI Business Analyst insights
-    summary.aiAnalysis = await generateAIInsights(summary);
-
-    // Map raw data to legacy format safely for older UI components
-    const legacyRecords = mapDynamicToLegacyRecords(rawRows, schema);
 
     return NextResponse.json({
       success: true,
       datasetId,
       fileName,
       message: `Dosya "${fileName}" başarıyla okundu. Toplam ${rawRows.length} veri satırı ayrıştırıldı.`,
-      records: legacyRecords, // Safe fallback records
       rawRows, // Original data for new dynamic components
       dynamicSchema: schema,
-      dynamicMetrics: metrics,
       dataQuality: quality,
+      biContext: biContext,
       analytics: {
-        chartInsights: summary.aiAnalysis,
-        autoInsights: summary.aiAnalysis?.anomalies
+        chartInsights: null,
+        autoInsights: null
       }
     });
 

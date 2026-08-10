@@ -34,23 +34,22 @@ export async function middleware(request: NextRequest) {
   // Check if we are in local preview mode
   const isPreviewMode = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_PREVIEW_MODE === 'true';
 
-  // Protect all routes except /auth and api routes
-  if (
-    !user &&
-    !isPreviewMode &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/api') &&
-    !request.nextUrl.pathname.includes('.') // allow static files
-  ) {
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth');
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+  const isRootRoute = request.nextUrl.pathname === '/';
+  const isStaticFile = request.nextUrl.pathname.includes('.');
+
+  // Protect all routes except /auth, /api, root /, and static files
+  if (!user && !isPreviewMode && !isAuthRoute && !isApiRoute && !isRootRoute && !isStaticFile) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     return NextResponse.redirect(url);
   }
 
-  // Redirect to home if user is logged in or we are in preview mode and trying to access /auth
-  if ((user || isPreviewMode) && request.nextUrl.pathname.startsWith('/auth')) {
+  // Redirect authenticated users away from auth and root routes to dashboard
+  if ((user || isPreviewMode) && (isAuthRoute || isRootRoute)) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
